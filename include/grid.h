@@ -55,17 +55,17 @@ typedef struct{
 // grid parameters
 typedef struct{
     double  lat;        // Latitude  (degrees) of the bottom-left corner of the grid.
-    double  lon;        // Longitude (degrees) of the bottom-left corner of the grid. 
-    
+    double  lon;        // Longitude (degrees) of the bottom-left corner of the grid.
+
     double  X;          // Width of domain (meters)
     double  Y;          // Length of domain (meters)
     double  rotangle;   // Angle (degrees) to rotate the grid conterclock-wise
     double  resol;      // Cell width and height (i.e. Resolution)in meters. Grid cells are forced to be (almost) square.
     int     N;          // Number of vertical levels
-    
+
     int     nX;         // number of X
     int     nY;         // number of Y
-    
+
     char    *Grid_filename;
 }grid;
 
@@ -75,51 +75,70 @@ typedef struct{
     char    *lat_name;
     char    *lon_name;
     char    *field_name;
-    
+
     double  **field;
     double  *lat;
     double  *lon;
-    
+
     double  min_depth;
-    
+
     // index variables
     size_t      nlat;
     size_t      nlon;
-	
-    
+
+
 }bathymetry;
 
 typedef struct{
-	
+
 	char    *input_xml;
+	char	*roms_input;
+	char	*tide_input;
+
     char    *fname;
     grid    g;
     bathymetry b;
-    
+
     // output grid parameters
     int     one;
-    
+
     char    spherical[1];
-    
+
     double  *x,*y;
     double  **x_rho, **y_rho;
     int     Lm,Mm,Lp,Mp, L, M;
     int     i,j;
     double  latdist;
-    
+
     double  el, xl;
-    
+
     double  **dx, **dy;
     double  **pm, **pn;
     double  **dndx;
     double  **dmde;
     double  **f;
     double  **h;    // bathymetry on rho grid
-    
+
+	// addr stuff
+	size_t		nLonRho;
+	size_t		nLatRho;
+	size_t	nLonTide;
+	size_t	nLatTide;
+	size_t	nLevTide;
+	size_t	nTimeTide;
+
+	double	*tideLon;
+	double	*tideLat;
+	double	*tideTime;
+	double  **lat_rho;
+	double  **lon_rho;
+	double	****tide_data;
+	double	**tide_on_roms;
+
     double  **Rx_rho;
     double  **Ry_rho;
-    
-    double  **lat_rho, **lon_rho;
+
+
     double  **x_u,**y_u;
     double  **x_v,**y_v;
     double  **x_psi,**y_psi;
@@ -134,7 +153,7 @@ typedef struct{
     double  **mask_v;
     double  **mask_psi;
     double  **angle;
-    
+
     // netcdf params
     int ncid;
     int retval;
@@ -143,7 +162,7 @@ typedef struct{
     int dimIdsV[NC_MAX_VAR_DIMS];
     int dimIdsPsi[NC_MAX_VAR_DIMS];
     int dimIdsOne[NC_MAX_VAR_DIMS];
-    
+
     // dimensions
     int xi_rho_dimid;
     int xi_u_dimid;
@@ -154,8 +173,11 @@ typedef struct{
     int eta_v_dimid;
     int eta_psi_dimid;
     int one_dimid;
-    
+
     // variable ids
+	// addr tide variable id
+	int vid_tide;
+	
     int vid_angle;
     int vid_dmde;
     int vid_dndx;
@@ -166,17 +188,17 @@ typedef struct{
     int vid_lat_psi;
     int vid_lat_u;
     int vid_lat_v;
-    
+
     int vid_lon_rho;
     int vid_lon_psi;
     int vid_lon_u;
     int vid_lon_v;
-    
+
     int vid_mask_rho;
     int vid_mask_psi;
     int vid_mask_u;
     int vid_mask_v;
-    
+
     int vid_pm;
     int vid_pn;
     int vid_spherical;
@@ -185,23 +207,23 @@ typedef struct{
     int vid_Y;
     int vid_dx;
     int vid_dy;
-    
-    
+
+
     //interp vars
     int		nElements;
 	int		nodesPerEl;
 	int		nx;
 	int		ny;
-	
+
 	// anti-clockwise element numbering
 	double	xi[4];
 	double	eta[4];
-	
+
 	double	pos[2];
-	
+
 	element	*ele;
 	mesh	msh;
-    
+
 }e;
 
 
@@ -243,6 +265,5 @@ double evaluate_linear_quad_shape_function( double*, double*, double *, int );
 double relative_difference(double, double);
 void interp_bathy_on_grid(e*);
 
-
-
-
+// addr new function
+void interp_tide_to_roms(e*);

@@ -17,12 +17,11 @@
         <vertical_levels>10</vertical_levels>          
     </params>
     <!-- bathymetry -->
-    <bathymetry>
+    <!--bathymetry>
         <filename>NEAust.nc</filename>
         <lat_coord>lat</lat_coord>
         <lon_coord>lon</lon_coord>
         <field>bath</field>
-        <!--filter_bathymetry>no</filter_bathymetry-->
-    </bathymetry>
+    </bathymetry-->
 
 </grid>
