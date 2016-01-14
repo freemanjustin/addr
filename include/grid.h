@@ -135,6 +135,7 @@ typedef struct{
 	size_t	nTimeTide;
 
 	char	*roms_time_units;
+	char	*tide_time_units;
 	double	*tideLon;
 	double	*tideLat;
 	double	*tideTime;
