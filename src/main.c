@@ -20,6 +20,14 @@ int main(int argc,char **argv)
 	int	ncid;
 	int varid;
 	int retval;
+	size_t attlen = 0;
+
+	// for time conversion
+	static	char *calendar = "Standard";
+    ut_system	*u_system;
+    ut_unit	*u_1;
+    double	tval, tval_inv, sec;
+    int	ierr, yr, mo, day, hr, min;
 
 	// malloc the work struct
 	E = malloc(sizeof(e));
@@ -36,6 +44,14 @@ int main(int argc,char **argv)
 		get_command_line_arg_as_string(&E->fname, argv[4]);
 	}
 
+	// initialize the time converison libs
+	/* Initialize the udunits-2 library */
+    ut_set_error_message_handler(ut_ignore);
+    if( (u_system = ut_read_xml( NULL )) == NULL ) {
+        fprintf( stderr, "Error initializing udunits-2 unit system\n" );
+        exit(-1);
+        }
+    ut_set_error_message_handler(ut_write_to_stderr);
 
     // read input XML
     get_params(E);
@@ -65,6 +81,15 @@ int main(int argc,char **argv)
     if((retval = nc_open(E->roms_input, NC_NOWRITE, &ncid)))
         fail("failed to open roms input file: error is %d\n",retval);
 
+	// get the time data
+	if((retval = nc_inq_dimid(ncid, "ocean_time", &varid)))
+        fail("failed to get roms ocean_time dimid: error is %d\n",retval);
+
+    if((retval = nc_inq_dimlen(ncid,varid,&E->nTimeRoms)))
+        fail("failed to get roms lat dimid: error is %d\n",retval);
+
+    printf("ocean_time = %zu\n", E->nTimeRoms);
+
     // get the lat dimension sizes
     if((retval = nc_inq_dimid(ncid, "xi_rho", &varid)))
         fail("failed to get roms lat dimid: error is %d\n",retval);
@@ -87,11 +112,40 @@ int main(int argc,char **argv)
     printf("eta_rho = %zu\n", E->nLonRho);
 
     // malloc room for the arrays
+	E->romsTime = malloc(E->nTimeRoms*sizeof(double));
 	E->lat_rho = malloc2d_double(E->nLatRho, E->nLonRho);
 	E->lon_rho = malloc2d_double(E->nLatRho, E->nLonRho);
 
 
     // read the data
+	nc_inq_varid(ncid, "ocean_time", &varid);
+    if((retval = nc_get_var_double(ncid, varid, &E->romsTime[0])))
+		fail("failed to read roms ocean_time data: error is %d\n", retval);
+
+	// get the time metadata units
+	nc_inq_attlen (ncid, varid, "units", &attlen);
+	E->roms_time_units = (char *) malloc(attlen + 1);  /* + 1 for trailing null */
+	nc_get_att_text(ncid, varid, "units", E->roms_time_units);
+	printf("units = %s\n", E->roms_time_units);
+
+		printf("romsTime[0] = %f\n", E->romsTime[0]);
+		// Make the Calendar calls
+	    //tval = 86460.0;	/* in seconds, this is 1 day and 1 minute */
+	    //tval = 8580;
+
+		/* Parse the units strings */
+	    if( (u_1 = ut_parse( u_system, E->roms_time_units, UT_ASCII )) == NULL ) {
+	        fprintf( stderr, "Error parsing units string \"%s\"\n", E->roms_time_units );
+	        exit(-1);
+	        }
+
+	    if( (ierr = utCalendar2_cal( E->romsTime[0], u_1, &yr, &mo, &day, &hr, &min, &sec, calendar )) != 0 ) {
+	        fprintf( stderr, "Error on utCalendar2_cal call: %s\n", ccs_err_str(ierr) );
+	        exit(-1);
+	        }
+	    printf( "this date is %04d-%02d-%02d %02d:%02d:%06.3lf\n",yr, mo, day, hr, min, sec );
+
+
     nc_inq_varid(ncid, "lat_rho", &varid);
     if((retval = nc_get_var_double(ncid, varid, &E->lat_rho[0][0])))
 		fail("failed to read roms lat_rho data: error is %d\n", retval);

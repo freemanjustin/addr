@@ -14,7 +14,7 @@ CFLAGS=	-O3 -g -Wall `xml2-config --cflags`
 INC=	-I./include 
 
 #LFLAGS= -lnetcdf -lxml2 
-LFLAGS= -lxml2 -lnetcdf
+LFLAGS= -lxml2 -ludunits2 -lnetcdf
 
 COBJ=	$(CSRC)main.o \
 	$(CSRC)jutil.o \
@@ -23,7 +23,9 @@ COBJ=	$(CSRC)main.o \
 	$(CSRC)malloc_arrays.o \
 	$(CSRC)netcdfIO.o \
 	$(CSRC)xmlIO.o \
-	$(CSRC)interp.o
+	$(CSRC)interp.o \
+	$(CSRC)calcalcs.o \
+	$(CSRC)utCalendar2_cal.o
 	
 
 OBJ=	$(COBJ) 

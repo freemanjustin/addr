@@ -19,6 +19,11 @@
 #include <libxml/xmlmemory.h>
 #include <libxml/parser.h>
 
+// time conversion utils
+#include <udunits2.h>
+#include "calcalcs.h"
+#include "utCalendar2_cal.h"
+
 #include "jutil.h"
 
 
@@ -122,14 +127,18 @@ typedef struct{
 	// addr stuff
 	size_t		nLonRho;
 	size_t		nLatRho;
+	size_t		nTimeRoms;
+
 	size_t	nLonTide;
 	size_t	nLatTide;
 	size_t	nLevTide;
 	size_t	nTimeTide;
 
+	char	*roms_time_units;
 	double	*tideLon;
 	double	*tideLat;
 	double	*tideTime;
+	double	*romsTime;
 	double  **lat_rho;
 	double  **lon_rho;
 	double	****tide_data;
@@ -177,7 +186,7 @@ typedef struct{
     // variable ids
 	// addr tide variable id
 	int vid_tide;
-	
+
     int vid_angle;
     int vid_dmde;
     int vid_dndx;

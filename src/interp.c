@@ -391,9 +391,9 @@ void interp_tide_to_roms(e *E){
             pos[1] = E->lat_rho[i][j];
 
 			if(pos[0] > 156.0){
-				printf("pre: i = %d, j = %d, pos = %f, %f\n",i,j,pos[0],pos[1]);
+				//printf("pre: i = %d, j = %d, pos = %f, %f\n",i,j,pos[0],pos[1]);
 				pos[0] = 155.9;
-				printf("  modded: i = %d, j = %d, pos = %f, %f\n",i,j,pos[0],pos[1]);
+				//printf("  modded: i = %d, j = %d, pos = %f, %f\n",i,j,pos[0],pos[1]);
 			}
 
 
