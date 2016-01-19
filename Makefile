@@ -11,10 +11,14 @@ CSRC=	./src/
 CFLAGS=	-O3 -g -Wall `xml2-config --cflags`
 #CFLAGS=	-O3 -g -fPIC -Wall
 
-INC=	-I./include 
+NNLIB=	./lib/nn
+
+INC=	-I./include \
+	-I$(NNLIB)
+
 
 #LFLAGS= -lnetcdf -lxml2 
-LFLAGS= -lxml2 -ludunits2 -lnetcdf
+LFLAGS= -lxml2 -ludunits2 -lnetcdf $(NNLIB)/libnn.a
 
 COBJ=	$(CSRC)main.o \
 	$(CSRC)jutil.o \
@@ -25,7 +29,8 @@ COBJ=	$(CSRC)main.o \
 	$(CSRC)xmlIO.o \
 	$(CSRC)interp.o \
 	$(CSRC)calcalcs.o \
-	$(CSRC)utCalendar2_cal.o
+	$(CSRC)utCalendar2_cal.o \
+	$(CSRC)nnutil.o
 	
 
 OBJ=	$(COBJ) 

@@ -77,6 +77,7 @@ void defvars(e *E){
 	defvar_netcdf(E, E->ncid, "tide", NC_DOUBLE, 2, &E->dimIdsRho[0], &E->vid_tide);
     add_txt_attribute_netcdf(E, E->ncid, E->vid_h, "long_name", "tide at RHO-points");
 	add_txt_attribute_netcdf(E, E->ncid, E->vid_h, "units", "m");
+	
 
 	defvar_netcdf(E, E->ncid, "lat_rho", NC_DOUBLE, 2, E->dimIdsRho, &E->vid_lat_rho);
     add_txt_attribute_netcdf(E, E->ncid, E->vid_lat_rho, "long_name", "latitude at RHO-points");

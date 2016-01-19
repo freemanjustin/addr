@@ -22,6 +22,9 @@ int main(int argc,char **argv)
 	int retval;
 	size_t attlen = 0;
 
+	// nn variables
+	int	n_valid_points;
+
 	// for time conversion
 	static	char *calendar = "Standard";
     ut_system	*u_system;
@@ -115,6 +118,7 @@ int main(int argc,char **argv)
 	E->romsTime = malloc(E->nTimeRoms*sizeof(double));
 	E->lat_rho = malloc2d_double(E->nLatRho, E->nLonRho);
 	E->lon_rho = malloc2d_double(E->nLatRho, E->nLonRho);
+	E->mask_rho = malloc2d_double(E->nLatRho, E->nLonRho);
 
 
     // read the data
@@ -156,7 +160,13 @@ int main(int argc,char **argv)
     if((retval = nc_get_var_double(ncid, varid, &E->lon_rho[0][0])))
 		fail("failed to read roms lat_rho data: error is %d\n", retval);
 
-		printf("lon_rho[0][0] = %f\n", E->lon_rho[0][0]);
+	printf("lon_rho[0][0] = %f\n", E->lon_rho[0][0]);
+
+	// get the rho_mask
+
+	nc_inq_varid(ncid, "mask_rho", &varid);
+    if((retval = nc_get_var_double(ncid, varid, &E->mask_rho[0][0])))
+		fail("failed to read roms mask_rho data: error is %d\n", retval);
 
 	// close the roms file for now
 	// will probably open the roms file as read-write so we can dump
@@ -253,11 +263,91 @@ int main(int argc,char **argv)
     nc_inq_varid(ncid, "z", &varid);
     if((retval = nc_get_var_double(ncid, varid, &E->tide_data[0][0][0][0])))
 		fail("failed to read tide data data: error is %d\n",retval);
-	// read in the number of lons and lon data values from the tide file
 
-	// read in the number of lats and lat data values from the tide file
+	// close the tide file
+	nc_close(ncid);
 
-	// read in the tide data from the input file
+		// do a natural neighbour interpolation on the tide data we just read in
+		// to fill in the land masked values before interpolating onto the ROMS grid
+		// actually, we can probably skip the bilinear inperpolation step and
+		// natural neighbor interpolate directly onto the ROMS grid. Since this is a
+		// test run, then do it in two steps...
+
+		// find out how many valid data points we have
+		// and setup the input array for lib-nn
+		E->nn_diff = malloc(E->nLonTide * E->nLatTide * sizeof(point));
+		E->nn_n = 0;
+		for(i=0;i<E->nLatTide;i++){
+			for(j=0;j<E->nLonTide;j++){
+				if(E->tide_data[0][0][i][j] > -999.0){
+					E->nn_diff[E->nn_n].y = E->tideLat[i];
+					E->nn_diff[E->nn_n].x = E->tideLon[j];
+					E->nn_diff[E->nn_n].z = E->tide_data[0][0][i][j];
+
+					E->nn_n++;
+				}
+			}
+		}
+
+		// now do the interpolation via lib-nn
+		E->nn_weight = 0.0;
+		// so have E->weight = 0.0; somewhere
+		// E->diff is the input data list
+		// E->interp is the output data list
+		// E-> nx and E->ny is the grid dimensions
+		E->nn_dx = fabs(E->tideLat[1] - E->tideLat[0]); // lon
+		E->nn_dy = fabs(E->tideLon[1] - E->tideLon[0]); // lat
+		// do the natural neighbour interpolation
+		// this will interpolate our scattered point data
+		// onto an orthogonal grid with dimensions
+		// E->nx x E->ny
+		// figure out E->nx and E->ny
+		get_mesh_dimensions(E, E->nn_n, E->nn_diff);
+		// and malloc room for the interpolated data
+		// we already know the mesh dimensions from the input tide file
+		// E->nx = number of longitudes in file
+		// E->ny = number of latitudes in file
+		E->nn_interp = malloc(E->nLonTide * E->nLatTide * sizeof(point));
+		printf("doing nn interpolation...\n"); fflush(stdout);
+		// E->n is the number of points in E->diff
+		// E->weight is a constant (equal to 0.0 and declared in the input xml file)
+
+
+		nn_interp_to_mesh(E, E->nn_n, E->nn_weight, E->nn_diff, E->nLonTide, E->nLatTide, E->nn_interp);
+		printf("done\n"); fflush(stdout);
+
+		// put the interpolated data into the tide array so we can write it out to
+		// a netcdf file
+		double *nn_interp;
+		nn_interp = malloc(E->nn_nx * E->nn_ny * sizeof(double));
+		printf("nn interp field: nn_nx = %d, nn_ny = %d\n", E->nn_nx, E->nn_ny);
+		for(i=0;i<E->nn_nx*E->nn_ny;i++){
+			//fprintf(fptr,"%.15g %.15g %.15g\n", p[i].x, p[i].y, p[i].z);
+			nn_interp[i] = E->nn_interp[i].z;
+		}
+
+	// write out the interped field
+	//E->nn_nx * E->nn_ny, E->nn_interp,
+	int lat_dimid, lon_dimid, dimIds[2];
+	int lat_varid, lon_varid, tide_interp_varid;
+	// create the file
+	nc_create("tide_interp.nc", NC_CLOBBER, &ncid);
+	// def dimensions
+	nc_def_dim(ncid, "lat", E->nn_ny, &lat_dimid);
+	nc_def_dim(ncid, "lon", E->nn_nx, &lon_dimid);
+	// def vars
+	dimIds[0] = lat_dimid;
+	dimIds[1] = lon_dimid;
+	nc_def_var(ncid, "lat", NC_DOUBLE, 1, &dimIds[0], &lat_varid);
+	nc_def_var(ncid, "lon", NC_DOUBLE, 1, &dimIds[1], &lon_varid);
+	nc_def_var(ncid, "tide_interp", NC_DOUBLE, 2, dimIds, &tide_interp_varid);
+	nc_enddef(ncid);
+	// write the data
+	nc_put_var_double(ncid, lat_varid, &E->tideLat[0]);
+	nc_put_var_double(ncid, lon_varid, &E->tideLon[0]);
+	nc_put_var_double(ncid, tide_interp_varid, nn_interp);
+	// close the file
+	nc_close(ncid);
 
 	// interpolate the tide data for each lon_rho and lat_rho point
 
@@ -267,12 +357,28 @@ int main(int argc,char **argv)
 	for(i=0;i<E->nLatRho;i++)
 		for(j=0;j<E->nLonRho;j++)
 			E->tide_on_roms[i][j] = 0.0;
-	// close the tide file
-	nc_close(ncid);
+
+
+	// temporarily splat the nn_interped field over the original data
+	int count = 0;
+	for(i=0;i<E->nLatTide;i++){
+		for(j=0;j<E->nLonTide;j++){
+			E->tide_data[0][0][i][j] = nn_interp[count];
+			count++;
+		}
+	}
 
 	// interpolate tide to roms grid
     interp_tide_to_roms(E);
 
+
+	// apply land-sea mask
+	for(i=0;i<E->nLatRho;i++){
+		for(j=0;j<E->nLonRho;j++){
+			if(E->mask_rho[i][j] == 0)
+				E->tide_on_roms[i][j] = NC_FILL_DOUBLE;
+		}
+	}
 	// write the interpolated field to file
 	write_netcdf(E);
 

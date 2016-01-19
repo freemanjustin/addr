@@ -26,6 +26,13 @@
 
 #include "jutil.h"
 
+// libnn includes
+#include "config.h"
+#include "nan.h"
+#include "minell.h"
+#include "nn.h"
+#include "preader.h"
+#include "delaunay.h"
 
 // macros
 #define	TRUE 1
@@ -117,12 +124,41 @@ typedef struct{
 
     double  el, xl;
 
-    double  **dx, **dy;
     double  **pm, **pn;
     double  **dndx;
     double  **dmde;
     double  **f;
     double  **h;    // bathymetry on rho grid
+
+	// libnn stuff for addr
+	// nn interp controls
+	int			nn_nx;
+	int			nn_ny;
+	double		nn_dx;
+	double		nn_dy;
+	double		nn_weight;
+	// the number of data points we have
+	int			nn_n;
+	int			have_min_lat;
+	int			have_max_lat;
+	int			have_min_lon;
+	int			have_max_lon;
+
+	// internal variables
+	point		*nn_diff;
+	point		*nn_interp;
+
+	int		nn_have_min_lat;
+	int		nn_have_max_lat;
+	int		nn_have_min_lon;
+	int		nn_have_max_lon;
+	double	min_lat;
+	double	max_lat;
+	double	min_lon;
+	double	max_lon;
+
+	// end of lib_nn stuff
+
 
 	// addr stuff
 	size_t		nLonRho;
@@ -277,3 +313,7 @@ void interp_bathy_on_grid(e*);
 
 // addr new function
 void interp_tide_to_roms(e*);
+
+// addr lib-nn functions
+void nn_interp_to_mesh(e *E, int n, double weight, point *pin, int nx, int ny, point *interp);
+void get_mesh_dimensions(e *E, int n, point *pin);

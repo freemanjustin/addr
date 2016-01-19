@@ -340,8 +340,8 @@ void interp_tide_to_roms(e *E){
 
     // setup the interpolation source grid data structures
 	// source grid is the tide data
-	E->nx = E->nLonTide; //E->nc.x-1;
-	E->ny = E->nLatTide; //E->nc.y-1;
+	E->nx = E->nLonTide-1; //E->nc.x-1;
+	E->ny = E->nLatTide-1; //E->nc.y-1;
 	E->nElements = E->nx*E->ny ;
 	E->ele = malloc(E->nElements*sizeof(element));
 	E->nodesPerEl = 4;
@@ -391,9 +391,15 @@ void interp_tide_to_roms(e *E){
             pos[1] = E->lat_rho[i][j];
 
 			if(pos[0] > 156.0){
-				//printf("pre: i = %d, j = %d, pos = %f, %f\n",i,j,pos[0],pos[1]);
-				pos[0] = 155.9;
-				//printf("  modded: i = %d, j = %d, pos = %f, %f\n",i,j,pos[0],pos[1]);
+				printf("pre: i = %d, j = %d, pos = %f, %f\n",i,j,pos[0],pos[1]);
+				pos[0] = 156.0;
+				printf("  modded: i = %d, j = %d, pos = %f, %f\n",i,j,pos[0],pos[1]);
+			}
+
+			if(pos[1] > -9.0){
+				printf("pre: i = %d, j = %d, pos = %f, %f\n",i,j,pos[0],pos[1]);
+				pos[1] = -9.0;
+				printf("  modded: i = %d, j = %d, pos = %f, %f\n",i,j,pos[0],pos[1]);
 			}
 
 
