@@ -129,6 +129,7 @@ int main(int argc,char **argv)
 	// get the time metadata units
 	nc_inq_attlen (ncid, varid, "units", &attlen);
 	E->roms_time_units = (char *) malloc(attlen + 1);  /* + 1 for trailing null */
+	E->roms_time_units[attlen] = '\x0';
 	nc_get_att_text(ncid, varid, "units", E->roms_time_units);
 	printf("units = %s\n", E->roms_time_units);
 
@@ -231,7 +232,7 @@ int main(int argc,char **argv)
 	nc_inq_attlen (ncid, varid, "units", &attlen);
 	E->tide_time_units = (char *) malloc(attlen + 1);  /* + 1 for trailing null */
 	nc_get_att_text(ncid, varid, "units", E->tide_time_units);
-	lr_pack(E->tide_time_units);
+	E->tide_time_units[attlen] = '\x0';
 	printf("tide time units = %s\n", E->tide_time_units);
 
 	printf("tideTime[0] = %f\n", E->tideTime[0]);
