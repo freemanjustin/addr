@@ -231,6 +231,7 @@ int main(int argc,char **argv)
 	nc_inq_attlen (ncid, varid, "units", &attlen);
 	E->tide_time_units = (char *) malloc(attlen + 1);  /* + 1 for trailing null */
 	nc_get_att_text(ncid, varid, "units", E->tide_time_units);
+	lr_pack(E->tide_time_units);
 	printf("tide time units = %s\n", E->tide_time_units);
 
 	printf("tideTime[0] = %f\n", E->tideTime[0]);
