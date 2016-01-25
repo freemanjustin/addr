@@ -106,6 +106,7 @@ typedef struct{
 	char    *input_xml;
 	char	*roms_input;
 	char	*tide_input;
+	char	*wave_input;
 
     char    *fname;
     grid    g;

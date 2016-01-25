@@ -26,7 +26,6 @@ COBJ=	$(CSRC)main.o \
 	$(CSRC)spheriq_dist.o \
 	$(CSRC)malloc_arrays.o \
 	$(CSRC)netcdfIO.o \
-	$(CSRC)xmlIO.o \
 	$(CSRC)interp.o \
 	$(CSRC)calcalcs.o \
 	$(CSRC)utCalendar2_cal.o \

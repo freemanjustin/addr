@@ -38,7 +38,8 @@ int main(int argc,char **argv)
 	else{
 		get_command_line_arg_as_string(&E->roms_input, argv[1]);
 		get_command_line_arg_as_string(&E->tide_input, argv[2]);
-		get_command_line_arg_as_string(&E->fname, argv[3]);
+		get_command_line_arg_as_string(&E->wave_input, argv[3]);
+		get_command_line_arg_as_string(&E->fname, argv[4]);
 	}
 
 	// initialize the time converison libs
@@ -448,6 +449,7 @@ int main(int argc,char **argv)
 	// close the file
 	nc_close(ncid);
 	*/
+
 
 	return 0;
 }
