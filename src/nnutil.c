@@ -53,6 +53,12 @@ void nn_interp_to_mesh(e *E, int n, double weight, point *pin, int nx, int ny, p
 
     }
 
+
+	free(pout);
+	free(d);			// for the triangle functions
+	free(interpolator);	// the interpolation method
+	free(pr);
+
 }
 
 void get_mesh_dimensions(e *E, int n, point *pin){

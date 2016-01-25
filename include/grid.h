@@ -172,6 +172,7 @@ typedef struct{
 
 	char	*roms_time_units;
 	char	*tide_time_units;
+	double  *interp_time;
 	double	*tideLon;
 	double	*tideLat;
 	double	*tideTime;
@@ -179,7 +180,19 @@ typedef struct{
 	double  **lat_rho;
 	double  **lon_rho;
 	double	****tide_data;
-	double	**tide_on_roms;
+	double	***tide_on_roms;
+
+	// for the time normalization stuff
+	ut_unit	*roms_ref_time;
+	ut_unit *tide_ref_time;
+
+	int start_time_index;
+	int end_time_index;
+	double start_time_roms;
+	double end_time_roms;
+
+
+
 
     double  **Rx_rho;
     double  **Ry_rho;
@@ -208,6 +221,7 @@ typedef struct{
     int dimIdsV[NC_MAX_VAR_DIMS];
     int dimIdsPsi[NC_MAX_VAR_DIMS];
     int dimIdsOne[NC_MAX_VAR_DIMS];
+	int dimIdsTide[NC_MAX_VAR_DIMS];
 
     // dimensions
     int xi_rho_dimid;
@@ -218,11 +232,13 @@ typedef struct{
     int eta_u_dimid;
     int eta_v_dimid;
     int eta_psi_dimid;
+	int	ocean_time_dimid;
     int one_dimid;
 
     // variable ids
 	// addr tide variable id
 	int vid_tide;
+	int vid_ocean_time;
 
     int vid_angle;
     int vid_dmde;
@@ -312,7 +328,7 @@ double relative_difference(double, double);
 void interp_bathy_on_grid(e*);
 
 // addr new function
-void interp_tide_to_roms(e*);
+void interp_tide_to_roms(e*, int);
 
 // addr lib-nn functions
 void nn_interp_to_mesh(e *E, int n, double weight, point *pin, int nx, int ny, point *interp);

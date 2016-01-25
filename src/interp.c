@@ -86,7 +86,7 @@ void interpolate_point(element *el, double *interp_value){
 
 void store_mesh(e *E, int nx, int ny){
 
-	int i,j,el;
+	int i,el;
 
 	el=0;
 
@@ -330,7 +330,7 @@ void interp_bathy_on_grid(e *E){
 
 
 
-void interp_tide_to_roms(e *E){
+void interp_tide_to_roms(e *E, int t){
 
     int i,j;
     int el;
@@ -370,10 +370,10 @@ void interp_tide_to_roms(e *E){
 			E->ele[el].node_coord[3][1] = E->tideLat[i+1]; // 3
 
 			// now set the nodal value for this element
-			E->ele[el].node_value[0] = E->tide_data[0][0][i][j];
-			E->ele[el].node_value[1] = E->tide_data[0][0][i][j+1];
-			E->ele[el].node_value[2] = E->tide_data[0][0][i+1][j+1];
-			E->ele[el].node_value[3] = E->tide_data[0][0][i+1][j];
+			E->ele[el].node_value[0] = E->tide_data[t][0][i][j];
+			E->ele[el].node_value[1] = E->tide_data[t][0][i][j+1];
+			E->ele[el].node_value[2] = E->tide_data[t][0][i+1][j+1];
+			E->ele[el].node_value[3] = E->tide_data[t][0][i+1][j];
 
 			el++;
 		}
@@ -391,15 +391,15 @@ void interp_tide_to_roms(e *E){
             pos[1] = E->lat_rho[i][j];
 
 			if(pos[0] > 156.0){
-				printf("pre: i = %d, j = %d, pos = %f, %f\n",i,j,pos[0],pos[1]);
+				//printf("pre: i = %d, j = %d, pos = %f, %f\n",i,j,pos[0],pos[1]);
 				pos[0] = 156.0;
-				printf("  modded: i = %d, j = %d, pos = %f, %f\n",i,j,pos[0],pos[1]);
+				//printf("  modded: i = %d, j = %d, pos = %f, %f\n",i,j,pos[0],pos[1]);
 			}
 
 			if(pos[1] > -9.0){
-				printf("pre: i = %d, j = %d, pos = %f, %f\n",i,j,pos[0],pos[1]);
+				//printf("pre: i = %d, j = %d, pos = %f, %f\n",i,j,pos[0],pos[1]);
 				pos[1] = -9.0;
-				printf("  modded: i = %d, j = %d, pos = %f, %f\n",i,j,pos[0],pos[1]);
+				//printf("  modded: i = %d, j = %d, pos = %f, %f\n",i,j,pos[0],pos[1]);
 			}
 
 
@@ -407,7 +407,7 @@ void interp_tide_to_roms(e *E){
 			el = get_owner_element(E, pos);
 
             calculate_interpolation_weights(&E->ele[el], E->xi, E->eta, pos);
-			interpolate_point(&E->ele[el], &E->tide_on_roms[i][j]);
+			interpolate_point(&E->ele[el], &E->tide_on_roms[t][i][j]);
 
         }
     }

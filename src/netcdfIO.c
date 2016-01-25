@@ -52,6 +52,9 @@ void defdims_netcdf(e *E){
 	E->one = 1;
 
 	// define the dimensions
+	if ((E->retval = nc_def_dim(E->ncid, "ocean_time", (E->end_time_index-E->start_time_index), &E->ocean_time_dimid)))
+		fail("nc_def_dim failed!\n");
+
 	if ((E->retval = nc_def_dim(E->ncid, "xi_rho", E->nLatRho, &E->xi_rho_dimid)))
 		fail("nc_def_dim failed!\n");
 
@@ -70,14 +73,19 @@ void defvars(e *E){
 
     // setup dimids
 
+
+	E->dimIdsTide[0] = E->ocean_time_dimid;
+	E->dimIdsTide[1] = E->eta_rho_dimid;
+    E->dimIdsTide[2] = E->xi_rho_dimid;
+
     E->dimIdsRho[0] = E->eta_rho_dimid;
     E->dimIdsRho[1] = E->xi_rho_dimid;
 
 
-	defvar_netcdf(E, E->ncid, "tide", NC_DOUBLE, 2, &E->dimIdsRho[0], &E->vid_tide);
+	defvar_netcdf(E, E->ncid, "tide", NC_DOUBLE, 3, &E->dimIdsTide[0], &E->vid_tide);
     add_txt_attribute_netcdf(E, E->ncid, E->vid_h, "long_name", "tide at RHO-points");
 	add_txt_attribute_netcdf(E, E->ncid, E->vid_h, "units", "m");
-	
+
 
 	defvar_netcdf(E, E->ncid, "lat_rho", NC_DOUBLE, 2, E->dimIdsRho, &E->vid_lat_rho);
     add_txt_attribute_netcdf(E, E->ncid, E->vid_lat_rho, "long_name", "latitude at RHO-points");
@@ -88,6 +96,11 @@ void defvars(e *E){
     add_txt_attribute_netcdf(E, E->ncid, E->vid_lon_rho, "long_name", "longitude at RHO-points");
 	add_txt_attribute_netcdf(E, E->ncid, E->vid_lon_rho, "units", "degree_east");
     add_txt_attribute_netcdf(E, E->ncid, E->vid_lon_rho, "_CoordinateAxisType", "Lon");
+
+	defvar_netcdf(E, E->ncid, "ocean_time", NC_DOUBLE, 1, &E->dimIdsTide[0], &E->vid_ocean_time);
+    add_txt_attribute_netcdf(E, E->ncid, E->vid_ocean_time, "long_name", "time");
+	add_txt_attribute_netcdf(E, E->ncid, E->vid_ocean_time, "units", "seconds since 1970-01-01 00:00:00");
+    add_txt_attribute_netcdf(E, E->ncid, E->vid_ocean_time, "calendar", "gregorian");
 
 }
 
@@ -131,7 +144,7 @@ void write_data(e *E){
 
 
     // write tide
-    if ((E->retval = nc_put_var_double(E->ncid, E->vid_tide, &E->tide_on_roms[0][0])))
+    if ((E->retval = nc_put_var_double(E->ncid, E->vid_tide, &E->tide_on_roms[0][0][0])))
         fail("put_var_ failed. Error code = %d\n",E->retval);
 
 
@@ -141,6 +154,10 @@ void write_data(e *E){
 
     // lon_rho
     if ((E->retval = nc_put_var_double(E->ncid, E->vid_lon_rho, &E->lon_rho[0][0])))
+        fail("put_var_ failed. Error code = %d\n",E->retval);
+
+	// ocean_time
+    if ((E->retval = nc_put_var_double(E->ncid, E->vid_ocean_time, &E->interp_time[0])))
         fail("put_var_ failed. Error code = %d\n",E->retval);
 
 
