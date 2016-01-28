@@ -162,17 +162,27 @@ typedef struct{
 
 
 	// addr stuff
+
+	// for roms
 	size_t		nLonRho;
 	size_t		nLatRho;
 	size_t		nTimeRoms;
 
+	// for tides
 	size_t	nLonTide;
 	size_t	nLatTide;
 	size_t	nLevTide;
 	size_t	nTimeTide;
 
+	// for wave setup
+	size_t	nTimeWaves;
+	size_t	nStationWaves;
+
+
+
 	char	*roms_time_units;
 	char	*tide_time_units;
+	char	*waves_time_units;
 	double  *interp_time;
 	double	*tideLon;
 	double	*tideLat;
@@ -180,8 +190,13 @@ typedef struct{
 	double	*romsTime;
 	double  **lat_rho;
 	double  **lon_rho;
+	double	*wavesLat;
+	double	*wavesLon;
+	double	*wavesTime;
+	double	**setup;
 	double	****tide_data;
 	double	***tide_on_roms;
+	double	**setup_on_roms;
 
 	// for the time normalization stuff
 	ut_unit	*roms_ref_time;

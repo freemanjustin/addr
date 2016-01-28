@@ -53,6 +53,7 @@ int main(int argc,char **argv)
 
 	printf("roms file = %s\n", E->roms_input);
 	printf("tide file = %s\n", E->tide_input);
+	printf("wave setup file = %s\n", E->wave_input);
 	printf("outputfile = %s\n", E->fname);
 
 	// read the target grid - this is the roms output curvilinear grid
@@ -105,9 +106,9 @@ int main(int argc,char **argv)
 
     // malloc room for the arrays
 	E->romsTime = malloc(E->nTimeRoms*sizeof(double));
-	E->lat_rho = malloc2d_double(E->nLatRho, E->nLonRho);
-	E->lon_rho = malloc2d_double(E->nLatRho, E->nLonRho);
-	E->mask_rho = malloc2d_double(E->nLatRho, E->nLonRho);
+	E->lat_rho = malloc2d_double(E->nLonRho, E->nLatRho);
+	E->lon_rho = malloc2d_double(E->nLonRho, E->nLatRho);
+	E->mask_rho = malloc2d_double(E->nLonRho, E->nLatRho);
 
 
     // read the data from the ROMS output file
@@ -170,6 +171,198 @@ int main(int argc,char **argv)
 	// will probably open the roms file as read-write so we can dump
 	// the interpolated tides onto it
 	nc_close(ncid);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	// read in the wave setup data
+	// open the file
+    if((retval = nc_open(E->wave_input, NC_NOWRITE, &ncid)))
+        fail("failed to open wave setup input file: error is %d\n",retval);
+
+	// get the time data
+	if((retval = nc_inq_dimid(ncid, "time", &varid)))
+        fail("failed to get wave setup dimid: error is %d\n",retval);
+
+    if((retval = nc_inq_dimlen(ncid,varid,&E->nTimeWaves)))
+        fail("failed to get roms lat dimlen: error is %d\n",retval);
+
+    printf("waves_times = %zu\n", E->nTimeWaves);
+
+    // get the lat dimension sizes
+    if((retval = nc_inq_dimid(ncid, "station", &varid)))
+        fail("failed to get waves station dimid: error is %d\n",retval);
+
+    if((retval = nc_inq_dimlen(ncid,varid,&E->nStationWaves)))
+        fail("failed to get waves statuib dimlen: error is %d\n",retval);
+
+    printf("waves station = %zu\n", E->nStationWaves);
+
+    // malloc room for the arrays
+	E->wavesLat = malloc(E->nStationWaves*sizeof(double));
+	E->wavesLon = malloc(E->nStationWaves*sizeof(double));
+	E->wavesTime = malloc(E->nTimeWaves*sizeof(double));
+	E->setup = malloc2d_double(E->nTimeWaves, E->nStationWaves);
+
+
+    // read the data from the waves output file
+	nc_inq_varid(ncid, "time", &varid);
+    if((retval = nc_get_var_double(ncid, varid, &E->wavesTime[0])))
+		fail("failed to read waves time data: error is %d\n", retval);
+
+	nc_inq_varid(ncid, "lat", &varid);
+    if((retval = nc_get_var_double(ncid, varid, &E->wavesLat[0])))
+		fail("failed to read waves lat data: error is %d\n", retval);
+
+		printf("waves lat[0] = %f\n", E->wavesLat[0]);
+
+    nc_inq_varid(ncid, "lon", &varid);
+    if((retval = nc_get_var_double(ncid, varid, &E->wavesLon[0])))
+		fail("failed to read waves lon data: error is %d\n", retval);
+
+	printf("waves lon[0] = %f\n", E->wavesLon[0]);
+
+	// get the rho_mask
+	nc_inq_varid(ncid, "setup", &varid);
+    if((retval = nc_get_var_double(ncid, varid, &E->setup[0][0])))
+		fail("failed to read waves setup data: error is %d\n", retval);
+
+	printf("waves setup[0][0] = %f\n", E->setup[0][0]);
+
+	// close the file
+	nc_close(ncid);
+
+
+	// malloc room for the output nearest neighbor interp wave setup data
+	// target grid for tide data
+
+	// jNOTE: fix up the size of the time dimension here!
+	E->setup_on_roms = malloc2d_double(E->nLonRho, E->nLatRho);
+	double **padded_mask = malloc2d_double(E->nLonRho+2, E->nLatRho+2);
+	// initialize the field to be fill_value everywhere
+	printf("i size nLatRho = %d\n", E->nLatRho);
+	printf("j size nLonRho = %d\n", E->nLonRho);
+
+	for(i=0;i<E->nLonRho+2;i++){
+		for(j=0;j<E->nLatRho+2;j++){
+			//E->setup_on_roms[i][j] = -1;//E->mask_rho[i][j];
+			if(i==0)
+				padded_mask[i][j] = 1.0;
+			if(j==0)
+				padded_mask[i][j] = 1.0;
+			if(i==E->nLonRho+1)
+				padded_mask[i][j] = 1.0;
+			if(j==E->nLatRho+1)
+				padded_mask[i][j] = 1.0;
+		}
+	}
+
+	for(i=0;i<E->nLonRho;i++){
+		for(j=0;j<E->nLatRho;j++){
+			padded_mask[i+1][j+1] = E->mask_rho[i][j];
+		}
+	}
+
+
+	double sum;
+	for(i=1;i<E->nLonRho-1;i++){
+		sum = 0;
+		for(j=1;j<E->nLatRho-1;j++){
+			//E->setup_on_roms[i][j] = NC_FILL_DOUBLE;//E->mask_rho[i][j]; // initialize to zero
+
+			//if( (i>0) && (i <E->nLonRho-1) && (j>0) && (j <E->nLatRho-1) ){
+
+
+				sum = 0.0;
+				sum += padded_mask[i-1][j-1] * 1.0/8.0;
+				sum += padded_mask[i-1][j] * 1.0/8.0;
+				sum += padded_mask[i-1][j+1] * 1.0/8.0;
+
+				sum += padded_mask[i][j-1] * 1.0/8.0;
+				sum += padded_mask[i][j] * 0;
+				sum += padded_mask[i][j+1] * 1.0/8.0;
+
+				sum += padded_mask[i+1][j-1] * 1.0/8.0;
+				sum += padded_mask[i+1][j] * 1.0/8.0;
+				sum += padded_mask[i+1][j+1] * 1.0/8.0;
+
+				//printf("i = %d, j = %d, sum = %f\n",i,j,sum);
+				if (sum == 1)	// all ocean neighbors
+					E->setup_on_roms[i-1][j-1] = 0;
+				else if(sum < 1)
+					E->setup_on_roms[i-1][j-1] = 1;	// is a coast
+
+				E->setup_on_roms[i-1][j-1] = E->setup_on_roms[i-1][j-1] && E->mask_rho[i-1][j-1];
+
+		}
+	}
+
+	free(padded_mask);
+
+	// write out the derived coast line
+	//E->nn_nx * E->nn_ny, E->nn_interp,
+	int lat_dimid, lon_dimid, dimIds[2];
+	int lat_varid, lon_varid, coastline_varid;
+	// create the file
+	nc_create("roms_coast.nc", NC_CLOBBER, &ncid);
+	// def dimensions
+	nc_def_dim(ncid, "xi_rho", E->nLatRho, &lat_dimid);
+	nc_def_dim(ncid, "eta_rho", E->nLonRho, &lon_dimid);
+	// def vars
+	dimIds[0] = lon_dimid;
+	dimIds[1] = lat_dimid;
+	nc_def_var(ncid, "lat_rho", NC_DOUBLE, 2, dimIds, &lat_varid);
+	nc_put_att_text(ncid, lat_varid, "_CoordinateAxisType", strlen("Lat"), "Lat");
+	nc_def_var(ncid, "lon_rho", NC_DOUBLE, 2, dimIds, &lon_varid);
+	nc_put_att_text(ncid, lon_varid, "_CoordinateAxisType", strlen("Lon"), "Lon");
+	nc_def_var(ncid, "coastline", NC_DOUBLE, 2, dimIds, &coastline_varid);
+	nc_put_att_text(ncid, coastline_varid, "coordinates", strlen("lat_rho lon_rho"), "lat_rho lon_rho");
+	nc_enddef(ncid);
+	// write the data
+	nc_put_var_double(ncid, lat_varid, &E->lat_rho[0][0]);
+	nc_put_var_double(ncid, lon_varid, &E->lon_rho[0][0]);
+	nc_put_var_double(ncid, coastline_varid, &E->setup_on_roms[0][0]);
+
+	// close the file
+	nc_close(ncid);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 	// read in the tide file
@@ -261,10 +454,7 @@ int main(int argc,char **argv)
 	// find the index bounds where the tide time overlaps the roms time
 	// the tide times should fully cover the roms times
 	E->start_time_index = -1;
-	E->end_time_index = -1;
-
 	E->start_time_roms = E->romsTime[0];
-	E->end_time_roms = E->romsTime[E->nTimeRoms-1];
 
 	// get the time start index for the tide file
 	for(t=0;t<E->nTimeTide;t++){
@@ -278,9 +468,12 @@ int main(int argc,char **argv)
 		exit(1);
 	}
 
-	// get the end start index for the tide file
+	// get the end index for the tide file
+	E->end_time_index = -1;
+	E->end_time_roms = E->romsTime[E->nTimeRoms-1];
 	for(t=E->nTimeTide-1;t>=0;t--){
-		if(E->tideTime[t]>E->end_time_roms)
+		printf("t = %d, tide_time = %f\n",t,E->tideTime[t]);
+		if(E->tideTime[t] >= E->end_time_roms)
 			E->end_time_index = t;
 	}
 
@@ -288,6 +481,8 @@ int main(int argc,char **argv)
 		fprintf(stderr,"couldn't find a matching end time in the tide file.\n");
 		fprintf(stderr,"check to make sure the tide file times sufficiently overlap\n");
 		fprintf(stderr,"the ROMS times.\n\n");
+		fprintf(stderr,"end time ROMS = %f\n", E->end_time_roms);
+		fprintf(stderr,"end time tide = %f\n", E->tideTime[E->nTimeTide-1]);
 		exit(1);
 	}
 
@@ -331,8 +526,7 @@ int main(int argc,char **argv)
 	// E->ny = number of latitudes in file
 	E->nn_interp = malloc(E->nLonTide * E->nLatTide * sizeof(point));
 
-	// target grid for tide data
-	E->tide_on_roms = malloc3d_double((E->end_time_index-E->start_time_index), E->nLatRho, E->nLonRho);
+	E->tide_on_roms = malloc3d_double((E->end_time_index-E->start_time_index), E->nLonRho, E->nLatRho);
 
 	printf("(E->end_time_index-E->start_time_index) = %d\n", E->end_time_index-E->start_time_index);
 
@@ -392,8 +586,9 @@ int main(int argc,char **argv)
 
 		// interpolate the tide data for each lon_rho and lat_rho point
 		printf("t = %d\n", t);
-		for(i=0;i<E->nLatRho;i++)
-			for(j=0;j<E->nLonRho;j++)
+
+		for(i=0;i<E->nLonRho;i++)
+			for(j=0;j<E->nLatRho;j++)
 				E->tide_on_roms[t][i][j] = 0.0;
 
 
@@ -411,8 +606,8 @@ int main(int argc,char **argv)
 
 
 		// apply land-sea mask
-		for(i=0;i<E->nLatRho;i++){
-			for(j=0;j<E->nLonRho;j++){
+		for(i=0;i<E->nLonRho;i++){
+			for(j=0;j<E->nLatRho;j++){
 				if(E->mask_rho[i][j] == 0)
 					E->tide_on_roms[t][i][j] = NC_FILL_DOUBLE;
 			}

@@ -384,8 +384,8 @@ void interp_tide_to_roms(e *E, int t){
     //print_elements(E);
 
     // for each rho grid point
-    for(i=0;i<E->nLatRho;i++){
-        for(j=0;j<E->nLonRho;j++){
+    for(i=0;i<E->nLonRho;i++){
+        for(j=0;j<E->nLatRho;j++){
             // get pos of grid point
             pos[0] = E->lon_rho[i][j];
             pos[1] = E->lat_rho[i][j];
