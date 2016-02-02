@@ -412,3 +412,71 @@ void interp_tide_to_roms(e *E, int t){
         }
     }
 }
+
+
+int get_nearest_setup_index(e *E, int this_time, double this_lat, double this_lon, double **setup, double *lat, double *lon){
+
+	int i;
+	int the_index;
+	double distance;
+	double min_distance = 999999999999999.0;
+	// find nearest latitude
+
+	for(i=0;i<E->nStationWaves;i++){
+		distance = spheriq_dist(this_lon, this_lat, lon[i], lat[i], 0);
+		if(distance < min_distance){
+			min_distance = distance;
+			the_index = i;
+		}
+	}
+
+/*
+	printf("looking for:");
+	printf("\ttime = %f\n", this_time);
+	printf("\tlat = %f\n", this_lat);
+	printf("\tlon = %f\n", this_lon);
+	printf("found this: the_index = %d\n", the_index);
+	printf("\tlat = %f\n", lat[the_index]);
+	printf("\tlon = %f\n", lon[the_index]);
+	printf("\tsetup = %f\n", setup[0][the_index]);
+	printf("\t distance = %f\n\n", min_distance);
+*/
+	//if(min_distance < 10000.00)
+		return the_index;
+	//else
+	//	return 0.0;
+}
+
+
+double get_nearest_setup(e *E, int this_time, double this_lat, double this_lon, double **setup, double *lat, double *lon){
+
+	int i;
+	int the_index;
+	double distance;
+	double min_distance = 999999999999999.0;
+	// find nearest latitude
+
+	for(i=0;i<E->nStationWaves;i++){
+		distance = spheriq_dist(this_lon, this_lat, lon[i], lat[i], 0);
+		if(distance < min_distance){
+			min_distance = distance;
+			the_index = i;
+		}
+	}
+
+/*
+	printf("looking for:");
+	printf("\ttime = %f\n", this_time);
+	printf("\tlat = %f\n", this_lat);
+	printf("\tlon = %f\n", this_lon);
+	printf("found this: the_index = %d\n", the_index);
+	printf("\tlat = %f\n", lat[the_index]);
+	printf("\tlon = %f\n", lon[the_index]);
+	printf("\tsetup = %f\n", setup[0][the_index]);
+	printf("\t distance = %f\n\n", min_distance);
+*/
+	//if(min_distance < 10000.00)
+		return setup[this_time][the_index];
+	//else
+	//	return 0.0;
+}

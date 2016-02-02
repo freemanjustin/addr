@@ -109,6 +109,7 @@ int main(int argc,char **argv)
 	E->lat_rho = malloc2d_double(E->nLonRho, E->nLatRho);
 	E->lon_rho = malloc2d_double(E->nLonRho, E->nLatRho);
 	E->mask_rho = malloc2d_double(E->nLonRho, E->nLatRho);
+	E->zeta = malloc3d_double(E->nTimeRoms, E->nLonRho, E->nLatRho);
 
 
     // read the data from the ROMS output file
@@ -166,6 +167,11 @@ int main(int argc,char **argv)
 	nc_inq_varid(ncid, "mask_rho", &varid);
     if((retval = nc_get_var_double(ncid, varid, &E->mask_rho[0][0])))
 		fail("failed to read roms mask_rho data: error is %d\n", retval);
+
+	// get the sea_surface_height
+	nc_inq_varid(ncid, "zeta", &varid);
+    if((retval = nc_get_var_double(ncid, varid, &E->zeta[0][0][0])))
+		fail("failed to read roms height data: error is %d\n", retval);
 
 	// close the roms file for now
 	// will probably open the roms file as read-write so we can dump
@@ -251,7 +257,8 @@ int main(int argc,char **argv)
 	// target grid for tide data
 
 	// jNOTE: fix up the size of the time dimension here!
-	E->setup_on_roms = malloc2d_double(E->nLonRho, E->nLatRho);
+	E->setup_on_roms = malloc3d_double(E->nTimeWaves, E->nLonRho, E->nLatRho);
+	E->coastline_mask = malloc2d_double(E->nLonRho, E->nLatRho);
 	double **padded_mask = malloc2d_double(E->nLonRho+2, E->nLatRho+2);
 	// initialize the field to be fill_value everywhere
 	printf("i size nLatRho = %d\n", E->nLatRho);
@@ -280,13 +287,7 @@ int main(int argc,char **argv)
 
 	double sum;
 	for(i=1;i<E->nLonRho-1;i++){
-		sum = 0;
 		for(j=1;j<E->nLatRho-1;j++){
-			//E->setup_on_roms[i][j] = NC_FILL_DOUBLE;//E->mask_rho[i][j]; // initialize to zero
-
-			//if( (i>0) && (i <E->nLonRho-1) && (j>0) && (j <E->nLatRho-1) ){
-
-
 				sum = 0.0;
 				sum += padded_mask[i-1][j-1] * 1.0/8.0;
 				sum += padded_mask[i-1][j] * 1.0/8.0;
@@ -302,49 +303,128 @@ int main(int argc,char **argv)
 
 				//printf("i = %d, j = %d, sum = %f\n",i,j,sum);
 				if (sum == 1)	// all ocean neighbors
-					E->setup_on_roms[i-1][j-1] = 0;
+					E->coastline_mask[i-1][j-1] = 0;
 				else if(sum < 1)
-					E->setup_on_roms[i-1][j-1] = 1;	// is a coast
+					E->coastline_mask[i-1][j-1] = 1;	// is a coast
 
-				E->setup_on_roms[i-1][j-1] = E->setup_on_roms[i-1][j-1] && E->mask_rho[i-1][j-1];
-
+				E->coastline_mask[i-1][j-1] = E->coastline_mask[i-1][j-1] && E->mask_rho[i-1][j-1];
 		}
 	}
 
 	free(padded_mask);
 
+	// get coastal zeta from roms_his
+	double	***zeta_coast = malloc3d_double(E->nTimeRoms, E->nLonRho, E->nLatRho);
+	for(t=0;t<E->nTimeRoms;t++){
+		for(i=0;i<E->nLonRho;i++){
+			for(j=0;j<E->nLatRho;j++){
+				zeta_coast[t][i][j] = E->zeta[t][i][j] * E->coastline_mask[i][j];
+			}
+		}
+	}
+
+
+
+	// assign closest wavesetup value to costline derived from the roms rho_mask
+	// E->setup = malloc2d_double(E->nTimeWaves, E->nStationWaves);
+	double this_time;
+	double this_lat;
+	double this_lon;
+	int	**nearest_index = malloc2d_int(E->nLonRho, E->nLatRho);
+
+	// first get the index mapping for each coastal cell
+	for(i=0;i<E->nLonRho;i++){
+		for(j=0;j<E->nLatRho;j++){
+			if(E->coastline_mask[i][j] == 1){ // if this point is a coastal point
+				// get longitude and latitude of the point
+				this_time = t;
+				this_lat = E->lat_rho[i][j];
+				this_lon = E->lon_rho[i][j];
+				nearest_index[i][j] = get_nearest_setup_index(E, this_time, this_lat, this_lon, E->setup, E->wavesLat, E->wavesLon);
+				//exit(1);
+
+			}
+			else{
+				//printf("fill it: i = %d, j = %d\n",i,j);
+				nearest_index[i][j] = -999;
+			}
+		}
+	}
+
+
+	for(t=0;t<E->nTimeWaves;t++){
+		printf("#### t = %d\n",t);
+		for(i=0;i<E->nLonRho;i++){
+			for(j=0;j<E->nLatRho;j++){
+				if(E->coastline_mask[i][j] == 1){ // if this point is a coastal point
+					/*
+					// get longitude and latitude of the point
+					this_time = t;
+					this_lat = E->lat_rho[i][j];
+					this_lon = E->lon_rho[i][j];
+					E->setup_on_roms[t][i][j] = get_nearest_setup(E, this_time, this_lat, this_lon, E->setup, E->wavesLat, E->wavesLon);
+					//exit(1);
+					*/
+					E->setup_on_roms[t][i][j] = E->setup[t][nearest_index[i][j]];
+				}
+				else{
+					//printf("fill it: i = %d, j = %d\n",i,j);
+					E->setup_on_roms[t][i][j] = 0.0;//NC_FILL_DOUBLE;
+				}
+			}
+		}
+	}
+
+
+
+
 	// write out the derived coast line
 	//E->nn_nx * E->nn_ny, E->nn_interp,
-	int lat_dimid, lon_dimid, dimIds[2];
-	int lat_varid, lon_varid, coastline_varid;
+	int lat_dimid, lon_dimid, time_dimid, time_waves_dimid, dimIds[2], dimIds3d[3], dimIds3d_waves[3] ;
+	int lat_varid, lon_varid, coastline_varid, setup_coast_varid, zeta_coast_varid;
 	// create the file
 	nc_create("roms_coast.nc", NC_CLOBBER, &ncid);
 	// def dimensions
+	nc_def_dim(ncid, "ocean_time", E->nTimeRoms, &time_dimid);
+	nc_def_dim(ncid, "wave_time", E->nTimeWaves, &time_waves_dimid);
 	nc_def_dim(ncid, "xi_rho", E->nLatRho, &lat_dimid);
 	nc_def_dim(ncid, "eta_rho", E->nLonRho, &lon_dimid);
 	// def vars
 	dimIds[0] = lon_dimid;
 	dimIds[1] = lat_dimid;
+
+	dimIds3d[0] = time_dimid;
+	dimIds3d[1] = lon_dimid;
+	dimIds3d[2] = lat_dimid;
+
+	dimIds3d_waves[0] = time_waves_dimid;
+	dimIds3d_waves[1] = lon_dimid;
+	dimIds3d_waves[2] = lat_dimid;
+
 	nc_def_var(ncid, "lat_rho", NC_DOUBLE, 2, dimIds, &lat_varid);
 	nc_put_att_text(ncid, lat_varid, "_CoordinateAxisType", strlen("Lat"), "Lat");
 	nc_def_var(ncid, "lon_rho", NC_DOUBLE, 2, dimIds, &lon_varid);
 	nc_put_att_text(ncid, lon_varid, "_CoordinateAxisType", strlen("Lon"), "Lon");
-	nc_def_var(ncid, "coastline", NC_DOUBLE, 2, dimIds, &coastline_varid);
+	nc_def_var(ncid, "coastline_mask", NC_DOUBLE, 2, dimIds, &coastline_varid);
 	nc_put_att_text(ncid, coastline_varid, "coordinates", strlen("lat_rho lon_rho"), "lat_rho lon_rho");
+	nc_def_var(ncid, "zeta_coast", NC_DOUBLE, 3, dimIds3d, &zeta_coast_varid);
+	nc_put_att_text(ncid, zeta_coast_varid, "coordinates", strlen("lat_rho lon_rho"), "lat_rho lon_rho");
+	nc_def_var(ncid, "setup", NC_DOUBLE, 3, dimIds3d_waves, &setup_coast_varid);
+	nc_put_att_text(ncid, setup_coast_varid, "coordinates", strlen("lat_rho lon_rho"), "lat_rho lon_rho");
 	nc_enddef(ncid);
 	// write the data
 	nc_put_var_double(ncid, lat_varid, &E->lat_rho[0][0]);
 	nc_put_var_double(ncid, lon_varid, &E->lon_rho[0][0]);
-	nc_put_var_double(ncid, coastline_varid, &E->setup_on_roms[0][0]);
+	nc_put_var_double(ncid, coastline_varid, &E->coastline_mask[0][0]);
+	nc_put_var_double(ncid, zeta_coast_varid, &zeta_coast[0][0][0]);
+	nc_put_var_double(ncid, setup_coast_varid, &E->setup_on_roms[0][0][0]);
 
 	// close the file
 	nc_close(ncid);
 
 
 
-
-
-
+	exit(1);
 
 
 

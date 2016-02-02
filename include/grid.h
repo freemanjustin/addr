@@ -196,7 +196,10 @@ typedef struct{
 	double	**setup;
 	double	****tide_data;
 	double	***tide_on_roms;
-	double	**setup_on_roms;
+	double	**coastline_mask;
+	double	***setup_on_roms;
+
+	double	***zeta;
 
 	// for the time normalization stuff
 	ut_unit	*roms_ref_time;
@@ -349,3 +352,7 @@ void interp_tide_to_roms(e*, int);
 // addr lib-nn functions
 void nn_interp_to_mesh(e *E, int n, double weight, point *pin, int nx, int ny, point *interp);
 void get_mesh_dimensions(e *E, int n, point *pin);
+
+// addr find nearest for setup
+int get_nearest_setup_index(e *E, int this_time, double this_lat, double this_lon, double **setup, double *lat, double *lon);
+double get_nearest_setup(e *E, int this_time, double this_lat, double this_lon, double **setup, double *lat, double *lon);
