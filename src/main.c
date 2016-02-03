@@ -230,6 +230,58 @@ int main(int argc,char **argv)
     if((retval = nc_get_var_double(ncid, varid, &E->wavesTime[0])))
 		fail("failed to read waves time data: error is %d\n", retval);
 
+	// normalize the time information between the roms_his file
+	// and the tide data file
+	// get everything in ROMS ocean_time
+	// get the time metadata units
+	nc_inq_attlen (ncid, varid, "units", &attlen);
+	E->waves_time_units = (char *) malloc(attlen + 1);  /* + 1 for trailing null */
+	E->waves_time_units[attlen] = '\x0';
+	nc_get_att_text(ncid, varid, "units", E->waves_time_units);
+	printf("waves time units = %s\n", E->waves_time_units);
+
+	printf("wavesTime[0] = %f\n", E->wavesTime[0]);
+	// Make the Calendar calls
+    //tval = 86460.0;	/* in seconds, this is 1 day and 1 minute */
+    //tval = 8580;
+
+
+	// Parse the units strings
+    if( (E->waves_ref_time = ut_parse( u_system, E->waves_time_units, UT_ASCII )) == NULL ) {
+        fprintf( stderr, "Error parsing units string \"%s\"\n", E->waves_time_units );
+        exit(-1);
+        }
+
+	/*
+    if( (ierr = utCalendar2_cal( E->wavesTime[0], E->waves_ref_time, &yr, &mo, &day, &hr, &min, &sec, calendar )) != 0 ) {
+        fprintf( stderr, "Error on utCalendar2_cal call: %d\n", ierr );
+        exit(-1);
+        }
+    printf( "this date is %04d-%02d-%02d %02d:%02d:%06.3lf\n",yr, mo, day, hr, min, sec );
+	*/
+
+	// put the tide time on the same time units as the roms time
+	for(t=0;t<E->nTimeWaves;t++){
+
+		//printf("PRE: waveTIme[t] = %f  ", E->wavesTime[t]);
+		// convert tide time into year, month, day, hour, minute and seconds
+	    if( (ierr = utCalendar2_cal( E->wavesTime[t], E->waves_ref_time, &yr, &mo, &day, &hr, &min, &sec, calendar )) != 0 ) {
+	        fprintf( stderr, "Error on utCalendar2_cal call: %d\n", ierr );
+	        exit(-1);
+	        }
+	    //printf( "this date is %04d-%02d-%02d %02d:%02d:%06.3lf\n",yr, mo, day, hr, min, sec );
+
+		// convert this date to be on the same units as the roms time
+		if( (ierr = utInvCalendar2_cal( yr, mo, day, hr, min, sec, E->roms_ref_time, &E->wavesTime[t], calendar )) != 0 ) {
+			fprintf( stderr, "Error on utCalendar2_cal call: %d\n", ierr );
+			exit(-1);
+			}
+		//printf( "POST: %04d-%02d-%02d %02d:%02d:%06.3lf is %lf %s in the %s calendar\n",
+		//	yr, mo, day, hr, min, sec, E->wavesTime[t], E->roms_time_units, calendar );
+	}
+
+
+
 	nc_inq_varid(ncid, "lat", &varid);
     if((retval = nc_get_var_double(ncid, varid, &E->wavesLat[0])))
 		fail("failed to read waves lat data: error is %d\n", retval);
@@ -381,7 +433,7 @@ int main(int argc,char **argv)
 	// write out the derived coast line
 	//E->nn_nx * E->nn_ny, E->nn_interp,
 	int lat_dimid, lon_dimid, time_dimid, time_waves_dimid, dimIds[2], dimIds3d[3], dimIds3d_waves[3] ;
-	int lat_varid, lon_varid, coastline_varid, setup_coast_varid, zeta_coast_varid;
+	int lat_varid, lon_varid, wave_time_varid, coastline_varid, setup_coast_varid, zeta_coast_varid;
 	// create the file
 	nc_create("roms_coast.nc", NC_CLOBBER, &ncid);
 	// def dimensions
@@ -401,6 +453,11 @@ int main(int argc,char **argv)
 	dimIds3d_waves[1] = lon_dimid;
 	dimIds3d_waves[2] = lat_dimid;
 
+	nc_def_var(ncid, "wave_time", NC_DOUBLE, 1, &dimIds3d_waves[0], &wave_time_varid);
+	nc_put_att_text(ncid, wave_time_varid, "long_name", strlen("time"), "time");
+	nc_put_att_text(ncid, wave_time_varid, "units", strlen(E->roms_time_units), E->roms_time_units);
+	nc_put_att_text(ncid, wave_time_varid, "calendar", strlen("gregorian"), "gregorian");
+
 	nc_def_var(ncid, "lat_rho", NC_DOUBLE, 2, dimIds, &lat_varid);
 	nc_put_att_text(ncid, lat_varid, "_CoordinateAxisType", strlen("Lat"), "Lat");
 	nc_def_var(ncid, "lon_rho", NC_DOUBLE, 2, dimIds, &lon_varid);
@@ -413,6 +470,8 @@ int main(int argc,char **argv)
 	nc_put_att_text(ncid, setup_coast_varid, "coordinates", strlen("lat_rho lon_rho"), "lat_rho lon_rho");
 	nc_enddef(ncid);
 	// write the data
+
+	nc_put_var_double(ncid, wave_time_varid, &E->wavesTime[0]);
 	nc_put_var_double(ncid, lat_varid, &E->lat_rho[0][0]);
 	nc_put_var_double(ncid, lon_varid, &E->lon_rho[0][0]);
 	nc_put_var_double(ncid, coastline_varid, &E->coastline_mask[0][0]);

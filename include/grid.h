@@ -204,6 +204,7 @@ typedef struct{
 	// for the time normalization stuff
 	ut_unit	*roms_ref_time;
 	ut_unit *tide_ref_time;
+	ut_unit *waves_ref_time;
 
 	int start_time_index;
 	int end_time_index;
