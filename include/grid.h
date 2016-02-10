@@ -13,14 +13,14 @@
 #include <errno.h>
 
 // netCDF header
-#include <netcdf.h>
+#include "netcdf.h"
 
 // libxml2 headers
 #include <libxml/xmlmemory.h>
 #include <libxml/parser.h>
 
 // time conversion utils
-#include <udunits2.h>
+#include "udunits2.h"
 #include "calcalcs.h"
 #include "utCalendar2_cal.h"
 
@@ -198,6 +198,7 @@ typedef struct{
 	double	***tide_on_roms;
 	double	**coastline_mask;
 	double	***setup_on_roms;
+	double	***setup_on_roms_time_interp;
 
 	double	***zeta;
 
@@ -357,3 +358,6 @@ void get_mesh_dimensions(e *E, int n, point *pin);
 // addr find nearest for setup
 int get_nearest_setup_index(e *E, int this_time, double this_lat, double this_lon, double **setup, double *lat, double *lon);
 double get_nearest_setup(e *E, int this_time, double this_lat, double this_lon, double **setup, double *lat, double *lon);
+
+// linear interpolation function
+double LinearInterpolate( double y1,double y2, double mu);

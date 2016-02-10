@@ -310,6 +310,9 @@ int main(int argc,char **argv)
 
 	// jNOTE: fix up the size of the time dimension here!
 	E->setup_on_roms = malloc3d_double(E->nTimeWaves, E->nLonRho, E->nLatRho);
+	// malloc room for the time interpolated data
+	E->setup_on_roms_time_interp = malloc3d_double(E->nTimeRoms, E->nLonRho, E->nLatRho);
+
 	E->coastline_mask = malloc2d_double(E->nLonRho, E->nLatRho);
 	double **padded_mask = malloc2d_double(E->nLonRho+2, E->nLatRho+2);
 	// initialize the field to be fill_value everywhere
@@ -375,8 +378,6 @@ int main(int argc,char **argv)
 		}
 	}
 
-
-
 	// assign closest wavesetup value to costline derived from the roms rho_mask
 	// E->setup = malloc2d_double(E->nTimeWaves, E->nStationWaves);
 	double this_time;
@@ -427,6 +428,65 @@ int main(int argc,char **argv)
 		}
 	}
 
+	// time interpolate the wavesetup data onto the roms time vector
+	int interpolate;
+	int	time1, time2;
+	double	y1;
+	double	y2;
+	double	mu;
+	for(t=0;t<E->nTimeRoms;t++){
+		// assume we are going to time interpolate
+		interpolate = TRUE;
+		time1 = -1;
+		time2 = -1;
+
+		// find the waveTimes that bound the current romsTime
+		// get lower bound
+		for(i=0;i<E->nTimeWaves;i++){
+			if(E->waveTimes[i] <= E->romsTime[t])	// check this
+				time1 = i;
+		}
+		// get upper bound
+		for(i=E->nTimeWaves-1;i>=0;i--){
+			if(E->waveTimes[i] >= E->romsTime[t])	// check this
+				time2 = i;
+		}
+		// check to make sure that we need to interpolate
+		// for some data, the time vectors are already aligned
+		if(time1 == time2)
+			interpolate = FALSE;
+
+		if( (time1 < 0) || (time2 < 0)){
+			printf("ERROR: wave time is not within the roms time vector!\n");
+			printf("not extrapolating - exiting!\n");
+			exit(1);
+		}
+
+		// setup the mu parameter for this time level
+		// mu is the roms time value (between 0 and 1) on the waveTime interp_value
+		//mu = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin ;
+		mu = ((E->romsTime[t] - E->waveTime[time1]) / (E->waveTime[time2] - E->waveTime[time1]));
+		printf("lower bound (wave time) = %f\n", E->waveTime[time1] );
+		printf("upper bound (wave time) = %f\n",  E->waveTime[time2]);
+		printf("target roms time = %f\n", E->romsTime[t]);
+		printf("mu = %f\n",mu);
+		for(i=0;i<E->nLonRho;i++){
+			for(j=0;j<E->nLatRho;j++){
+				// interp the wave setup onto the roms time
+				// y1 is the first vale at the wave time
+				y1 = E->setup_on_roms[time1][i][j];
+				// y2 is the second value at the wave time
+				y1 = E->setup_on_roms[time2][i][j];
+
+
+				if(interpolate == TRUE)
+					//E->setup_on_roms_time_interp = LinearInterpolate( double y1,double y2, double mu);
+				else
+					E->setup_on_roms_time_interp = E->setup_on_roms;
+			}
+		}
+	}
+
 
 
 
@@ -434,6 +494,7 @@ int main(int argc,char **argv)
 	//E->nn_nx * E->nn_ny, E->nn_interp,
 	int lat_dimid, lon_dimid, time_dimid, time_waves_dimid, dimIds[2], dimIds3d[3], dimIds3d_waves[3] ;
 	int lat_varid, lon_varid, wave_time_varid, coastline_varid, setup_coast_varid, zeta_coast_varid;
+	int ocean_time_varid;
 	// create the file
 	nc_create("roms_coast.nc", NC_CLOBBER, &ncid);
 	// def dimensions
@@ -458,6 +519,11 @@ int main(int argc,char **argv)
 	nc_put_att_text(ncid, wave_time_varid, "units", strlen(E->roms_time_units), E->roms_time_units);
 	nc_put_att_text(ncid, wave_time_varid, "calendar", strlen("gregorian"), "gregorian");
 
+	nc_def_var(ncid, "ocean_time", NC_DOUBLE, 1, &dimIds3d[0], &ocean_time_varid);
+	nc_put_att_text(ncid, ocean_time_varid, "long_name", strlen("time"), "time");
+	nc_put_att_text(ncid, ocean_time_varid, "units", strlen(E->roms_time_units), E->roms_time_units);
+	nc_put_att_text(ncid, ocean_time_varid, "calendar", strlen("gregorian"), "gregorian");
+
 	nc_def_var(ncid, "lat_rho", NC_DOUBLE, 2, dimIds, &lat_varid);
 	nc_put_att_text(ncid, lat_varid, "_CoordinateAxisType", strlen("Lat"), "Lat");
 	nc_def_var(ncid, "lon_rho", NC_DOUBLE, 2, dimIds, &lon_varid);
@@ -471,6 +537,7 @@ int main(int argc,char **argv)
 	nc_enddef(ncid);
 	// write the data
 
+	nc_put_var_double(ncid, ocean_time_varid, &E->romsTime[0]);
 	nc_put_var_double(ncid, wave_time_varid, &E->wavesTime[0]);
 	nc_put_var_double(ncid, lat_varid, &E->lat_rho[0][0]);
 	nc_put_var_double(ncid, lon_varid, &E->lon_rho[0][0]);
