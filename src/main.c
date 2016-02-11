@@ -68,7 +68,9 @@ int main(int argc,char **argv)
 
 	// write the interpolated field to file
 	//write_netcdf(E);
+	printf("writing coastal data...");
 	write_coastal_data(E);
+	printf("done\n");
 
 
 	/*
