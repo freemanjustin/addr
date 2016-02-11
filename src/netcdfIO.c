@@ -173,8 +173,8 @@ void write_coastal_data(e *E) {
 	int retval;
 	size_t attlen = 0;
 
-	int lat_dimid, lon_dimid, time_dimid, time_waves_dimid, dimIds[2], dimIds3d[3], dimIds3d_waves[3] ;
-	int lat_varid, lon_varid, wave_time_varid, coastline_varid, setup_coast_varid, zeta_coast_varid;
+	int lat_dimid, lon_dimid, time_dimid, time_waves_dimid, time_tides_dimid, dimIds[2], dimIds3d[3], dimIds3d_waves[3], dimIds3d_tides[3] ;
+	int lat_varid, lon_varid, wave_time_varid, tide_time_varid, coastline_varid, setup_coast_varid, zeta_coast_varid, tide_coast_varid;
 
 	int	Hs_coast_varid, Tp_coast_varid;
 	int ocean_time_varid;
@@ -184,7 +184,8 @@ void write_coastal_data(e *E) {
 	// def dimensions
 	nc_def_dim(ncid, "ocean_time", E->nTimeRoms, &time_dimid);
 	//nc_def_dim(ncid, "wave_time", E->nTimeWaves, &time_waves_dimid);
-	nc_def_dim(ncid,"wave_time", (E->waves_end_time_index-E->waves_start_time_index), &time_waves_dimid);
+	nc_def_dim(ncid,"wave_time", E->nTimeWavesSubset, &time_waves_dimid);
+	nc_def_dim(ncid,"tide_time", E->nTimeTideSubset, &time_tides_dimid);
 	nc_def_dim(ncid, "xi_rho", E->nLatRho, &lat_dimid);
 	nc_def_dim(ncid, "eta_rho", E->nLonRho, &lon_dimid);
 	// def vars
@@ -199,15 +200,29 @@ void write_coastal_data(e *E) {
 	dimIds3d_waves[1] = lon_dimid;
 	dimIds3d_waves[2] = lat_dimid;
 
+	dimIds3d_tides[0] = time_tides_dimid;
+	dimIds3d_tides[1] = lon_dimid;
+	dimIds3d_tides[2] = lat_dimid;
+
+
+	/*
 	nc_def_var(ncid, "wave_time", NC_DOUBLE, 1, &dimIds3d_waves[0], &wave_time_varid);
 	nc_put_att_text(ncid, wave_time_varid, "long_name", strlen("time"), "time");
 	nc_put_att_text(ncid, wave_time_varid, "units", strlen(E->roms_time_units), E->roms_time_units);
 	nc_put_att_text(ncid, wave_time_varid, "calendar", strlen("gregorian"), "gregorian");
+	*/
 
 	nc_def_var(ncid, "ocean_time", NC_DOUBLE, 1, &dimIds3d[0], &ocean_time_varid);
 	nc_put_att_text(ncid, ocean_time_varid, "long_name", strlen("time"), "time");
 	nc_put_att_text(ncid, ocean_time_varid, "units", strlen(E->roms_time_units), E->roms_time_units);
 	nc_put_att_text(ncid, ocean_time_varid, "calendar", strlen("gregorian"), "gregorian");
+
+
+	nc_def_var(ncid, "tide_time", NC_DOUBLE, 1, &dimIds3d_tides[0], &tide_time_varid);
+	nc_put_att_text(ncid, ocean_time_varid, "long_name", strlen("time"), "time");
+	nc_put_att_text(ncid, ocean_time_varid, "units", strlen(E->roms_time_units), E->roms_time_units);
+	nc_put_att_text(ncid, ocean_time_varid, "calendar", strlen("gregorian"), "gregorian");
+
 
 	nc_def_var(ncid, "lat_rho", NC_DOUBLE, 2, dimIds, &lat_varid);
 	nc_put_att_text(ncid, lat_varid, "_CoordinateAxisType", strlen("Lat"), "Lat");
@@ -217,28 +232,37 @@ void write_coastal_data(e *E) {
 	nc_put_att_text(ncid, coastline_varid, "coordinates", strlen("lat_rho lon_rho"), "lat_rho lon_rho");
 	nc_def_var(ncid, "zeta_coast", NC_DOUBLE, 3, dimIds3d, &zeta_coast_varid);
 	nc_put_att_text(ncid, zeta_coast_varid, "coordinates", strlen("lat_rho lon_rho"), "lat_rho lon_rho");
-	nc_def_var(ncid, "setup", NC_DOUBLE, 3, dimIds3d_waves, &setup_coast_varid);
+	//nc_def_var(ncid, "setup", NC_DOUBLE, 3, dimIds3d_waves, &setup_coast_varid);
+	nc_def_var(ncid, "setup", NC_DOUBLE, 3, dimIds3d, &setup_coast_varid);
 	nc_put_att_text(ncid, setup_coast_varid, "coordinates", strlen("lat_rho lon_rho"), "lat_rho lon_rho");
 
+	/*
 	nc_def_var(ncid, "Hs", NC_DOUBLE, 3, dimIds3d_waves, &Hs_coast_varid);
 	nc_put_att_text(ncid, Hs_coast_varid, "coordinates", strlen("lat_rho lon_rho"), "lat_rho lon_rho");
 
 	nc_def_var(ncid, "Tp", NC_DOUBLE, 3, dimIds3d_waves, &Tp_coast_varid);
 	nc_put_att_text(ncid, Tp_coast_varid, "coordinates", strlen("lat_rho lon_rho"), "lat_rho lon_rho");
 
+	*/
+	nc_def_var(ncid, "tide", NC_DOUBLE, 3, dimIds3d_tides, &tide_coast_varid);
+	nc_put_att_text(ncid, tide_coast_varid, "coordinates", strlen("lat_rho lon_rho"), "lat_rho lon_rho");
+
 	nc_enddef(ncid);
 	// write the data
 
 	nc_put_var_double(ncid, ocean_time_varid, &E->romsTime[0]);
 	//nc_put_var_double(ncid, wave_time_varid, &E->wavesTime[0]);
-	nc_put_var_double(ncid,wave_time_varid, &E->waves_interp_time[0]);
+	nc_put_var_double(ncid, wave_time_varid, &E->waves_interp_time[0]);
 	nc_put_var_double(ncid, lat_varid, &E->lat_rho[0][0]);
 	nc_put_var_double(ncid, lon_varid, &E->lon_rho[0][0]);
 	nc_put_var_double(ncid, coastline_varid, &E->coastline_mask[0][0]);
 	nc_put_var_double(ncid, zeta_coast_varid, &E->zeta_coast[0][0][0]);
-	nc_put_var_double(ncid, setup_coast_varid, &E->setup_on_roms[0][0][0]);
-	nc_put_var_double(ncid, Hs_coast_varid, &E->Hs_on_roms[0][0][0]);
-	nc_put_var_double(ncid, Tp_coast_varid, &E->Tp_on_roms[0][0][0]);
+	//nc_put_var_double(ncid, setup_coast_varid, &E->setup_on_roms[0][0][0]);
+	nc_put_var_double(ncid, setup_coast_varid, &E->setup_on_roms_time_interp[0][0][0]);
+	//nc_put_var_double(ncid, Hs_coast_varid, &E->Hs_on_roms[0][0][0]);
+	//nc_put_var_double(ncid, Tp_coast_varid, &E->Tp_on_roms[0][0][0]);
+
+	nc_put_var_double(ncid, tide_coast_varid, &E->tide_on_roms[0][0][0]);
 
 	// close the file
 	nc_close(ncid);

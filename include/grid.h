@@ -168,18 +168,23 @@ typedef struct{
 	size_t		nLonRho;
 	size_t		nLatRho;
 	size_t		nTimeRoms;
+	double		roms_min_lat;
+	double		roms_min_lon;
+	double		roms_max_lat;
+	double		roms_max_lon;
 
 	// for tides
 	size_t	nLonTide;
 	size_t	nLatTide;
 	size_t	nLevTide;
 	size_t	nTimeTide;
+	size_t	nTimeTideSubset;
 
 	// for wave setup
 	size_t	nTimeWaves;
 	size_t  nLonWaves;
 	size_t	nLatWaves;
-	//size_t	nStationWaves;
+	size_t	nTimeWavesSubset;
 
 
 
@@ -388,9 +393,12 @@ void get_mesh_dimensions(e *E, int n, point *pin);
 int get_nearest_slope_index(e *E, double this_lat, double this_lon, double *lat, double *lon);
 double get_nearest_slope(e *E, int this_time, double this_lat, double this_lon, double **setup, double *lat, double *lon);
 
-// linear interpolation function
+//  interpolation function
 double LinearInterpolate( double y1,double y2, double mu);
+double splint(double *xa, double *ya, double *y2a, int n, double x);
+void spline(double *x, double *y, int n, double yp1, double ypn, double *y2);
 
+void get_coastal_slope(e *E);
 
 // the big functions
 void process_roms(e*);

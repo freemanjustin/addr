@@ -142,6 +142,29 @@ void process_roms(e *E){
 	nc_close(ncid);
 
 
+    // find min and max longitude and latitudes for the roms data
+    E->roms_min_lat = 9999.0; E->roms_max_lat = -99999.0;
+    E->roms_min_lon = 9999.0; E->roms_max_lon = -99999.0;
+
+    for(i=0;i<E->nLonRho;i++){
+		for(j=0;j<E->nLatRho;j++){
+			if(E->lon_rho[i][j] < E->roms_min_lon)
+                E->roms_min_lon = E->lon_rho[i][j];
+            if(E->lon_rho[i][j] > E->roms_max_lon)
+                E->roms_max_lon = E->lon_rho[i][j];
+            if(E->lat_rho[i][j] < E->roms_min_lat)
+                E->roms_min_lat = E->lat_rho[i][j];
+            if(E->lat_rho[i][j] > E->roms_max_lat)
+                E->roms_max_lat = E->lat_rho[i][j];
+		}
+	}
+
+    printf("spatial bounds from roms file:\n");
+    printf("\tlon: %f to %f\n", E->roms_min_lon, E->roms_max_lon);
+    printf("\tlat: %f to %f\n", E->roms_min_lat, E->roms_max_lat);
+
+
+
     // extract the coastline wet cells from the roms input
     E->coastline_mask = malloc2d_double(E->nLonRho, E->nLatRho);
 	padded_mask = malloc2d_double(E->nLonRho+2, E->nLatRho+2);
@@ -203,7 +226,10 @@ void process_roms(e *E){
 	for(t=0;t<E->nTimeRoms;t++){
 		for(i=0;i<E->nLonRho;i++){
 			for(j=0;j<E->nLatRho;j++){
-				E->zeta_coast[t][i][j] = E->zeta[t][i][j] * E->coastline_mask[i][j];
+                if(E->coastline_mask[i][j] == 1)
+				    E->zeta_coast[t][i][j] = E->zeta[t][i][j];
+                else
+                    E->zeta_coast[t][i][j] = NC_FILL_DOUBLE;
 			}
 		}
 	}

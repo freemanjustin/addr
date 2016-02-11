@@ -63,9 +63,11 @@ int main(int argc,char **argv)
 	// get tide on roms grid
 	process_tides(E);
 
+	// add the components
+
 
 	// write the interpolated field to file
-	write_netcdf(E);
+	//write_netcdf(E);
 	write_coastal_data(E);
 
 
