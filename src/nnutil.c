@@ -13,7 +13,8 @@ void nn_interp_to_mesh(e *E, int n, double weight, point *pin, int nx, int ny, p
 	preader *pr = NULL;			// point reader struct
 	int	this_point = 0;
 
-	nn_rule = SIBSON;
+	//nn_rule = SIBSON;
+	nn_rule = E->nn_rule;//NON_SIBSONIAN;
 
 	// get the range of the input data...
 	if( (E->have_min_lat == TRUE) && (E->have_max_lat == TRUE)

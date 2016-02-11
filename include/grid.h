@@ -148,6 +148,7 @@ typedef struct{
 	// internal variables
 	point		*nn_diff;
 	point		*nn_interp;
+	NN_RULE		nn_rule;
 
 	int		nn_have_min_lat;
 	int		nn_have_max_lat;
@@ -176,44 +177,69 @@ typedef struct{
 
 	// for wave setup
 	size_t	nTimeWaves;
-	size_t	nStationWaves;
+	size_t  nLonWaves;
+	size_t	nLatWaves;
+	//size_t	nStationWaves;
 
 
 
 	char	*roms_time_units;
 	char	*tide_time_units;
 	char	*waves_time_units;
-	double  *interp_time;
+	double  *tide_interp_time;
+	double	*waves_interp_time;
 	double	*tideLon;
 	double	*tideLat;
 	double	*tideTime;
 	double	*romsTime;
 	double  **lat_rho;
 	double  **lon_rho;
+
 	double	*wavesLat;
 	double	*wavesLon;
 	double	*wavesTime;
+	double	***Hs;
+	double	***Tp;
+
 	double	**setup;
 	double	****tide_data;
 	double	***tide_on_roms;
+	double	***Hs_on_roms;
+	double	***Tp_on_roms;
 	double	**coastline_mask;
+	double	***zeta_coast;
 	double	***setup_on_roms;
 	double	***setup_on_roms_time_interp;
 
 	double	***zeta;
 
 	// for the time normalization stuff
+	// for time conversion
+	char calendar[9];
+    ut_system	*u_system;
 	ut_unit	*roms_ref_time;
 	ut_unit *tide_ref_time;
 	ut_unit *waves_ref_time;
 
-	int start_time_index;
-	int end_time_index;
+	int waves_start_time_index;
+	int waves_end_time_index;
+	int tide_start_time_index;
+	int tide_end_time_index;
 	double start_time_roms;
 	double end_time_roms;
 
+	// for the slope data
+	size_t	nSlopes;
+	double	*slopeLon;
+	double	*slopeLat;
+	double	*slope;
 
 
+
+
+
+
+	// can probably remove these ones left over from gridr
 
     double  **Rx_rho;
     double  **Ry_rho;
@@ -350,14 +376,24 @@ void interp_bathy_on_grid(e*);
 
 // addr new function
 void interp_tide_to_roms(e*, int);
+void interp_hs_to_roms(e *E, int t);
+void interp_tp_to_roms(e *E, int t);
+double get_setup(double Hs, double Tp, double slope);
 
 // addr lib-nn functions
 void nn_interp_to_mesh(e *E, int n, double weight, point *pin, int nx, int ny, point *interp);
 void get_mesh_dimensions(e *E, int n, point *pin);
 
 // addr find nearest for setup
-int get_nearest_setup_index(e *E, int this_time, double this_lat, double this_lon, double **setup, double *lat, double *lon);
-double get_nearest_setup(e *E, int this_time, double this_lat, double this_lon, double **setup, double *lat, double *lon);
+int get_nearest_slope_index(e *E, double this_lat, double this_lon, double *lat, double *lon);
+double get_nearest_slope(e *E, int this_time, double this_lat, double this_lon, double **setup, double *lat, double *lon);
 
 // linear interpolation function
 double LinearInterpolate( double y1,double y2, double mu);
+
+
+// the big functions
+void process_roms(e*);
+void process_auswave(e*);
+void process_tides(e*);
+void write_coastal_data(e*);

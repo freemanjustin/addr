@@ -390,6 +390,7 @@ void interp_tide_to_roms(e *E, int t){
             pos[0] = E->lon_rho[i][j];
             pos[1] = E->lat_rho[i][j];
 
+			/*
 			if(pos[0] > 156.0){
 				//printf("pre: i = %d, j = %d, pos = %f, %f\n",i,j,pos[0],pos[1]);
 				pos[0] = 156.0;
@@ -401,7 +402,7 @@ void interp_tide_to_roms(e *E, int t){
 				pos[1] = -9.0;
 				//printf("  modded: i = %d, j = %d, pos = %f, %f\n",i,j,pos[0],pos[1]);
 			}
-
+			*/
 
             // find out which element this lies within
 			el = get_owner_element(E, pos);
@@ -414,7 +415,177 @@ void interp_tide_to_roms(e *E, int t){
 }
 
 
-int get_nearest_setup_index(e *E, int this_time, double this_lat, double this_lon, double **setup, double *lat, double *lon){
+void interp_hs_to_roms(e *E, int t){
+
+    int i,j;
+    int el;
+    double  pos[2];
+    //double  interp_value;
+
+
+    // setup the interpolation source grid data structures
+	// source grid is the tide data
+	E->nx = E->nLonWaves-1; //E->nc.x-1;
+	E->ny = E->nLatWaves-1; //E->nc.y-1;
+	E->nElements = E->nx*E->ny ;
+	E->ele = malloc(E->nElements*sizeof(element));
+	E->nodesPerEl = 4;
+
+	E->msh.x = malloc((E->nx+1) * sizeof(double));
+	E->msh.y = malloc((E->ny+1) * sizeof(double));
+
+	init_xi_eta(E);
+
+	el = 0;
+	for(i=0;i<E->ny;i++){
+		for(j=0;j<E->nx;j++){
+
+			// set positions for this element
+			// element node numbering is anti-clockwise
+			E->ele[el].node_coord[0][0] = E->wavesLon[j];
+			E->ele[el].node_coord[0][1] = E->wavesLat[i]; // 0
+
+			E->ele[el].node_coord[1][0] = E->wavesLon[j+1];
+			E->ele[el].node_coord[1][1] = E->wavesLat[i]; // 1
+
+			E->ele[el].node_coord[2][0] = E->wavesLon[j+1];
+			E->ele[el].node_coord[2][1] = E->wavesLat[i+1]; // 2
+
+			E->ele[el].node_coord[3][0] = E->wavesLon[j];
+			E->ele[el].node_coord[3][1] = E->wavesLat[i+1]; // 3
+
+			// now set the nodal value for this element
+			E->ele[el].node_value[0] = E->Hs[t][i][j];
+			E->ele[el].node_value[1] = E->Hs[t][i][j+1];
+			E->ele[el].node_value[2] = E->Hs[t][i+1][j+1];
+			E->ele[el].node_value[3] = E->Hs[t][i+1][j];
+
+			el++;
+		}
+	}
+
+    // the store_mesh call is required for the function get_owner_element
+	store_mesh(E, E->nx, E->ny);
+    //print_elements(E);
+
+    // for each rho grid point
+    for(i=0;i<E->nLonRho;i++){
+        for(j=0;j<E->nLatRho;j++){
+            // get pos of grid point
+            pos[0] = E->lon_rho[i][j];
+            pos[1] = E->lat_rho[i][j];
+
+			/*
+			if(pos[0] > 156.0){
+				//printf("pre: i = %d, j = %d, pos = %f, %f\n",i,j,pos[0],pos[1]);
+				pos[0] = 156.0;
+				//printf("  modded: i = %d, j = %d, pos = %f, %f\n",i,j,pos[0],pos[1]);
+			}
+
+			if(pos[1] > -9.0){
+				//printf("pre: i = %d, j = %d, pos = %f, %f\n",i,j,pos[0],pos[1]);
+				pos[1] = -9.0;
+				//printf("  modded: i = %d, j = %d, pos = %f, %f\n",i,j,pos[0],pos[1]);
+			}
+			*/
+
+            // find out which element this lies within
+			el = get_owner_element(E, pos);
+
+            calculate_interpolation_weights(&E->ele[el], E->xi, E->eta, pos);
+			interpolate_point(&E->ele[el], &E->Hs_on_roms[t][i][j]);
+        }
+    }
+}
+
+
+void interp_tp_to_roms(e *E, int t){
+
+    int i,j;
+    int el;
+    double  pos[2];
+    //double  interp_value;
+
+
+    // setup the interpolation source grid data structures
+	// source grid is the tide data
+	E->nx = E->nLonWaves-1; //E->nc.x-1;
+	E->ny = E->nLatWaves-1; //E->nc.y-1;
+	E->nElements = E->nx*E->ny ;
+	E->ele = malloc(E->nElements*sizeof(element));
+	E->nodesPerEl = 4;
+
+	E->msh.x = malloc((E->nx+1) * sizeof(double));
+	E->msh.y = malloc((E->ny+1) * sizeof(double));
+
+	init_xi_eta(E);
+
+	el = 0;
+	for(i=0;i<E->ny;i++){
+		for(j=0;j<E->nx;j++){
+
+			// set positions for this element
+			// element node numbering is anti-clockwise
+			E->ele[el].node_coord[0][0] = E->wavesLon[j];
+			E->ele[el].node_coord[0][1] = E->wavesLat[i]; // 0
+
+			E->ele[el].node_coord[1][0] = E->wavesLon[j+1];
+			E->ele[el].node_coord[1][1] = E->wavesLat[i]; // 1
+
+			E->ele[el].node_coord[2][0] = E->wavesLon[j+1];
+			E->ele[el].node_coord[2][1] = E->wavesLat[i+1]; // 2
+
+			E->ele[el].node_coord[3][0] = E->wavesLon[j];
+			E->ele[el].node_coord[3][1] = E->wavesLat[i+1]; // 3
+
+			// now set the nodal value for this element
+			E->ele[el].node_value[0] = E->Tp[t][i][j];
+			E->ele[el].node_value[1] = E->Tp[t][i][j+1];
+			E->ele[el].node_value[2] = E->Tp[t][i+1][j+1];
+			E->ele[el].node_value[3] = E->Tp[t][i+1][j];
+
+			el++;
+		}
+	}
+
+    // the store_mesh call is required for the function get_owner_element
+	store_mesh(E, E->nx, E->ny);
+    //print_elements(E);
+
+    // for each rho grid point
+    for(i=0;i<E->nLonRho;i++){
+        for(j=0;j<E->nLatRho;j++){
+            // get pos of grid point
+            pos[0] = E->lon_rho[i][j];
+            pos[1] = E->lat_rho[i][j];
+
+			/*
+			if(pos[0] > 156.0){
+				//printf("pre: i = %d, j = %d, pos = %f, %f\n",i,j,pos[0],pos[1]);
+				pos[0] = 156.0;
+				//printf("  modded: i = %d, j = %d, pos = %f, %f\n",i,j,pos[0],pos[1]);
+			}
+
+			if(pos[1] > -9.0){
+				//printf("pre: i = %d, j = %d, pos = %f, %f\n",i,j,pos[0],pos[1]);
+				pos[1] = -9.0;
+				//printf("  modded: i = %d, j = %d, pos = %f, %f\n",i,j,pos[0],pos[1]);
+			}
+			*/
+
+            // find out which element this lies within
+			el = get_owner_element(E, pos);
+
+            calculate_interpolation_weights(&E->ele[el], E->xi, E->eta, pos);
+			interpolate_point(&E->ele[el], &E->Tp_on_roms[t][i][j]);
+
+        }
+    }
+}
+
+
+
+int get_nearest_slope_index(e *E, double this_lat, double this_lon, double *lat, double *lon){
 
 	int i;
 	int the_index;
@@ -422,7 +593,7 @@ int get_nearest_setup_index(e *E, int this_time, double this_lat, double this_lo
 	double min_distance = 999999999999999.0;
 	// find nearest latitude
 
-	for(i=0;i<E->nStationWaves;i++){
+	for(i=0;i<E->nSlopes;i++){
 		distance = spheriq_dist(this_lon, this_lat, lon[i], lat[i], 0);
 		if(distance < min_distance){
 			min_distance = distance;
@@ -448,7 +619,7 @@ int get_nearest_setup_index(e *E, int this_time, double this_lat, double this_lo
 }
 
 
-double get_nearest_setup(e *E, int this_time, double this_lat, double this_lon, double **setup, double *lat, double *lon){
+double get_nearest_slope(e *E, int this_time, double this_lat, double this_lon, double **setup, double *lat, double *lon){
 
 	int i;
 	int the_index;
@@ -456,7 +627,7 @@ double get_nearest_setup(e *E, int this_time, double this_lat, double this_lon, 
 	double min_distance = 999999999999999.0;
 	// find nearest latitude
 
-	for(i=0;i<E->nStationWaves;i++){
+	for(i=0;i<E->nSlopes;i++){
 		distance = spheriq_dist(this_lon, this_lat, lon[i], lat[i], 0);
 		if(distance < min_distance){
 			min_distance = distance;
