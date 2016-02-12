@@ -180,7 +180,7 @@ void write_coastal_data(e *E) {
 	int ocean_time_varid;
 
 	// create the file
-	nc_create("roms_coast.nc", NC_CLOBBER, &ncid);
+	nc_create(E->fname, NC_CLOBBER, &ncid);
 	// def dimensions
 	nc_def_dim(ncid, "ocean_time", E->nTimeRoms, &time_dimid);
 	//nc_def_dim(ncid, "wave_time", E->nTimeWaves, &time_waves_dimid);

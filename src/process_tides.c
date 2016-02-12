@@ -327,7 +327,7 @@ void process_tides(e *E){
     // time interp tide data to roms time
 
     // time interpolate the wavesetup data onto the roms time vector
-    printf("creating %d interpolated time levels for the setup field\n", E->nTimeRoms);
+    printf("creating %d interpolated time levels for the tide field\n", E->nTimeRoms);
     E->tide_on_roms_time_interp = malloc3d_double(E->nTimeRoms, E->nLonRho, E->nLatRho);
     // initialize this array
     for(t=0;t<E->nTimeRoms;t++){

@@ -531,7 +531,7 @@ void process_auswave(e *E){
     // to calculate setup, we need Hs, Tp and slope at coastal pointers
 
     // read in the slope data
-
+    printf("calculating wave setup...");
     get_coastal_slope(E);
 
     // malloc room for the setup field
@@ -589,7 +589,7 @@ void process_auswave(e *E){
 			}
 		}
 	}
-
+    printf("...done\n");
 
 	// time interpolate the wavesetup data onto the roms time vector
     printf("creating %d interpolated time levels for the setup field\n", E->nTimeRoms);

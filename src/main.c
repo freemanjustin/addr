@@ -72,6 +72,8 @@ int main(int argc,char **argv)
 	write_coastal_data(E);
 	printf("done\n");
 
+	// write out time series data for each coastal point
+	write_time_series(E);
 
 	/*
 	// write out the interped field coming from the natural neighbor interpolation

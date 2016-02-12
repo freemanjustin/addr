@@ -412,3 +412,4 @@ void write_coastal_data(e*);
 void time_interp_field(double *xpts, double *ypts, int npts_in, double *interp_x, double * interp_y, int interp_npts);
 
 void add(e*);
+void write_time_series(e*);
