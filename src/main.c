@@ -64,7 +64,7 @@ int main(int argc,char **argv)
 	process_tides(E);
 
 	// add the components
-
+	add(E);
 
 	// write the interpolated field to file
 	//write_netcdf(E);

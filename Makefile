@@ -32,7 +32,8 @@ COBJ=	$(CSRC)main.o \
 	$(CSRC)nnutil.o \
 	$(CSRC)process_roms.o \
 	$(CSRC)process_tides.o \
-	$(CSRC)process_waves.o
+	$(CSRC)process_waves.o \
+	$(CSRC)add.o
 	
 
 OBJ=	$(COBJ) 

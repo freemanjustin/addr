@@ -667,7 +667,14 @@ double LinearInterpolate( double y1,double y2, double mu){
    return(y1*(1-mu)+y2*mu);
 }
 
-
+/*
+Given arrays x[1..n] and y[1..n] containing a tabulated function, i.e., yi = f(xi), with
+x1 < x2 <... < xN , and given values yp1 and ypn for the first derivative of the interpolating
+function at points 1 and n, respectively, this routine returns an array y2[1..n] that contains
+the second derivatives of the interpolating function at the tabulated points xi. If yp1 and/or
+ypn are equal to 1 × 1030 or larger, the routine is signaled to set the corresponding boundary
+condition for a natural spline, with zero second derivative on that boundary
+*/
 void spline(double *x, double *y, int n, double yp1, double ypn, double *y2) {
 
     double	*u;
@@ -744,15 +751,40 @@ double splint(double *xa, double *ya, double *y2a, int n, double x) {
 	return a*ya[klo] + b*ya[khi] + ((a*a*a - a)*y2a[klo] + (b*b*b - b)*y2a[khi])*(h*h)/6.0;
 }
 
-/*
-void time_interp_field(e *E){
-
+/* send this function the control points and an array of desired interpolated
+	points within the control points and it will return the interpolated
+	values at those points */
+void time_interp_field( 	double *xpts, double *ypts, int npts_in,
+								double *interp_x, double * interp_y, int interp_npts){
+	int		i;
+	double	*interp_spline;
 	// setup the spline stuff
-	E->lat_spline = malloc(E->npts*sizeof(double));
+	interp_spline = malloc(npts_in*sizeof(double));
 	//void spline(double *x, double *y, int n, double yp1, double ypn, double *y2)
-	spline(E->points, E->lat, E->npts, 0.0, 0.0, &E->lat_spline[0]);
+	// x is the x axis data
+	// y is the value at each x
+	// npts is how many control points we have
+	// yp1 is the derivative at x = 0
+	// ypn is the derivative at x = n
+	// *y2 is the spline
+	spline(&xpts[0], &ypts[0], npts_in, 0.0, 0.0, &interp_spline[0]);
 
-	// do the spline interpolation
-	E->theta[1] = splint(E->points, E->lon_uw, E->lon_spline,E->npts,(double)this_point + (double)time/E->pts[next_point].duration  );
+	//for(i=0;i<npts_in;i++)
+	//	printf("xpts[%d] = %f,  =ypts[%d] = %f\n",i,xpts[i],i,ypts[i]);
+
+	// now do the spline interpolation for this time
+	for(i=0;i<interp_npts;i++){
+		/*
+		Given the arrays xa[1..n] and ya[1..n], which tabulate a function (with the xai’s in order),
+		and given the array y2a[1..n], which is the output from spline above, and given a value of
+		x, this routine returns a cubic-spline interpolated value y
+		*/
+		//printf("interp_x[%d] = %f\n", i, interp_x[i]);
+		interp_y[i] = splint(&xpts[0], &ypts[0], &interp_spline[0], npts_in, interp_x[i]);
+		//printf("interp value is %f\n", interp_y[i]);
+
+	}
+
+	free(interp_spline);
+
 }
-*/

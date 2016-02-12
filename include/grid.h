@@ -209,6 +209,7 @@ typedef struct{
 	double	**setup;
 	double	****tide_data;
 	double	***tide_on_roms;
+	double	***tide_on_roms_time_interp;
 	double	***Hs_on_roms;
 	double	***Tp_on_roms;
 	double	**coastline_mask;
@@ -217,6 +218,8 @@ typedef struct{
 	double	***setup_on_roms_time_interp;
 
 	double	***zeta;
+
+	double	***added;
 
 	// for the time normalization stuff
 	// for time conversion
@@ -405,3 +408,7 @@ void process_roms(e*);
 void process_auswave(e*);
 void process_tides(e*);
 void write_coastal_data(e*);
+
+void time_interp_field(double *xpts, double *ypts, int npts_in, double *interp_x, double * interp_y, int interp_npts);
+
+void add(e*);

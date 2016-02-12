@@ -538,8 +538,6 @@ void process_auswave(e *E){
     // jNOTE: fix up the size of the time dimension here!
 	E->setup_on_roms = malloc3d_double(E->nTimeWavesSubset, E->nLonRho, E->nLatRho);
 	// malloc room for the time interpolated data
-	E->setup_on_roms_time_interp = malloc3d_double(E->nTimeRoms, E->nLonRho, E->nLatRho);
-    // for each coastal point calculate the wave setup
 
 
 	// assign closest slope value to costline derived from the roms rho_mask
@@ -594,69 +592,40 @@ void process_auswave(e *E){
 
 
 	// time interpolate the wavesetup data onto the roms time vector
-	int interpolate;
-	int	time1, time2;
-	double	y1;
-	double	y2;
-	double	mu;
-
     printf("creating %d interpolated time levels for the setup field\n", E->nTimeRoms);
-	for(t=0;t<E->nTimeRoms;t++){
-		// assume we are going to time interpolate
-		interpolate = TRUE;
-		time1 = -1;
-		time2 = -1;
+    E->setup_on_roms_time_interp = malloc3d_double(E->nTimeRoms, E->nLonRho, E->nLatRho);
+    // initialize this array
+    for(t=0;t<E->nTimeRoms;t++){
+        for(i=0;i<E->nLonRho;i++){
+		    for(j=0;j<E->nLatRho;j++){
+                E->setup_on_roms_time_interp[t][i][j] = NC_FILL_DOUBLE;
+            }
+        }
+    }
+    // target time vector = E->romsTime
+    // source time vector = E->wavesTime
+    // y value vector
+    double *ypts = malloc(E->nTimeWavesSubset*sizeof(double));
+    double *interp_y = malloc(E->nTimeRoms*sizeof(double));
+	for(i=0;i<E->nLonRho;i++){
+		for(j=0;j<E->nLatRho;j++){
+            if(E->setup_on_roms[0][i][j] != NC_FILL_DOUBLE){
+                for(t=0;t<E->nTimeWavesSubset;t++){
+                    // get the wave setup vector at this location
+                    ypts[t] = E->setup_on_roms[t][i][j];
+    		    }
+                time_interp_field(&E->wavesTime[E->waves_start_time_index], &ypts[0], E->nTimeWavesSubset, &E->romsTime[0], &interp_y[0], E->nTimeRoms);
 
-		// find the waveTimes that bound the current romsTime
-		// get lower bound
-		for(i=0;i<E->nTimeWaves;i++){
-			if(E->wavesTime[i] <= E->romsTime[t])	// check this
-				time1 = i;
-		}
-		// get upper bound
-		for(i=E->nTimeWaves-1;i>=0;i--){
-			if(E->wavesTime[i] >= E->romsTime[t])	// check this
-				time2 = i;
-		}
-		// check to make sure that we need to interpolate
-		// for some data, the time vectors are already aligned
-		if(time1 == time2)
-			interpolate = FALSE;
-
-		if( (time1 < 0) || (time2 < 0)){
-			printf("ERROR: wave time is not within the roms time vector!\n");
-			printf("not extrapolating - exiting!\n");
-			exit(1);
-		}
-
-		// setup the mu parameter for this time level
-		// mu is the roms time value (between 0 and 1) on the waveTime interp_value
-		//mu = (((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin ;
-		mu = ((E->romsTime[t] - E->wavesTime[time1]) / (E->wavesTime[time2] - E->wavesTime[time1]));
-		printf("lower bound (wave time) = %f\n", E->wavesTime[time1] );
-		printf("upper bound (wave time) = %f\n",  E->wavesTime[time2]);
-		printf("target roms time = %f\n", E->romsTime[t]);
-		printf("mu = %f\n",mu);
-		for(i=0;i<E->nLonRho;i++){
-			for(j=0;j<E->nLatRho;j++){
-				// interp the wave setup onto the roms time
-				// y1 is the first vale at the wave time
-				y1 = E->setup_on_roms[time1][i][j];
-				// y2 is the second value at the wave time
-				y2 = E->setup_on_roms[time2][i][j];
-
-
-				if(interpolate == TRUE)
-					E->setup_on_roms_time_interp[t][i][j] = LinearInterpolate( y1, y2, mu);
-				else{
-                    //printf("no interp: t = %d, i = %d, j = %d\n", t,i,j);
-                    //printf("\tsetup = %f\n", E->setup_on_roms[t][i][j]);
-					E->setup_on_roms_time_interp[t][i][j] = E->setup_on_roms[t][i][j];
-
-                }
-			}
-		}
+                // now put this data into the time interp array
+                for(t=0;t<E->nTimeRoms;t++){
+                    // get the wave setup vector at this location
+                    E->setup_on_roms_time_interp[t][i][j] = interp_y[t];
+    		    }
+            }
+	    }
 	}
+    free(ypts);
+    free(interp_y);
 
     free(E->Hs);
     free(E->Tp);
