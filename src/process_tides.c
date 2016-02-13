@@ -229,7 +229,17 @@ void process_tides(e *E){
 	// close the tide file
 	nc_close(ncid);
 
-
+    #ifdef CHECK
+    // temporarily mess with this input data to check!
+    for(t=0;t<E->nTimeTideSubset;t++){
+        for(i=0;i<E->nLatTide;i++){
+            for(j=0;j<E->nLonTide;j++){
+                E->tide_data[t][0][i][j] = (double)t;
+            }
+        }
+    }
+    #endif
+    
 	// do a natural neighbour interpolation on the tide data we just read in
 	// to fill in the land masked values before interpolating onto the ROMS grid
 

@@ -255,6 +255,8 @@ void process_auswave(e *E){
 	// close the file
 	nc_close(ncid);
 
+
+
     // flip the auswave data so the lat vector is monotonically increasing
     double ***flipData = malloc3d_double(E->nTimeWavesSubset, E->nLatWaves, E->nLonWaves);
     double  *flipLat = malloc(E->nLatWaves*sizeof(double));
@@ -300,6 +302,18 @@ void process_auswave(e *E){
     }
     free(flipData);
     free(flipLat);
+
+    #ifdef CHECK
+    // temporarily mess with this input data to check!
+    for(t=0;t<E->nTimeWavesSubset;t++){
+        for(i=0;i<E->nLatWaves;i++){
+            for(j=0;j<E->nLonWaves;j++){
+                E->Tp[t][i][j] = (double)t;
+                E->Hs[t][i][j] = (double)t;
+            }
+        }
+    }
+    #endif
 
     // malloc room for the output nearest neighbor interp auswave  data
 	// target grid for auswave data data
@@ -581,6 +595,10 @@ void process_auswave(e *E){
 
 					E->setup_on_roms[t][i][j] = get_setup(E->Hs_on_roms[t][i][j], E->Tp_on_roms[t][i][j], E->slope[nearest_index[i][j]]);
 
+                    #ifdef CHECK
+                    // temporarily splat with Hs to check
+                    E->setup_on_roms[t][i][j] = E->Hs_on_roms[t][i][j];
+                    #endif
 				}
 				else{
 					//printf("fill it: i = %d, j = %d\n",i,j);
