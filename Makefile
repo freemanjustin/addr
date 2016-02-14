@@ -8,7 +8,7 @@ CC=	gcc
 
 CSRC=	./src/
 
-CFLAGS=	-O3 -g -Wall `xml2-config --cflags`
+CFLAGS=	-O3 -g -Wall 
 #CFLAGS=	-O3 -g -fPIC -Wall
 
 NNLIB=	./lib/nn
@@ -18,7 +18,7 @@ INC=	-I./include \
 
 
 #LFLAGS= -lnetcdf -lxml2 
-LFLAGS= -lxml2 -ludunits2 -lnetcdf $(NNLIB)/libnn.a
+LFLAGS= -ludunits2 -lnetcdf $(NNLIB)/libnn.a
 
 COBJ=	$(CSRC)main.o \
 	$(CSRC)jutil.o \

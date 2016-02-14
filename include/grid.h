@@ -16,8 +16,8 @@
 #include "netcdf.h"
 
 // libxml2 headers
-#include <libxml/xmlmemory.h>
-#include <libxml/parser.h>
+//#include <libxml/xmlmemory.h>
+//#include <libxml/parser.h>
 
 // time conversion utils
 #include "udunits2.h"
