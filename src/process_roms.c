@@ -47,7 +47,7 @@ void process_roms(e *E){
     if((retval = nc_inq_dimlen(ncid,varid,&E->nTimeRoms)))
         fail("failed to get roms lat dimid: error is %d\n",retval);
 
-    printf("ocean_time = %zu\n", E->nTimeRoms);
+    //printf("ocean_time = %zu\n", E->nTimeRoms);
 
     // get the lat dimension sizes
     if((retval = nc_inq_dimid(ncid, "xi_rho", &varid)))
@@ -56,7 +56,7 @@ void process_roms(e *E){
     if((retval = nc_inq_dimlen(ncid,varid,&E->nLatRho)))
         fail("failed to get roms lat dimid: error is %d\n",retval);
 
-    printf("xi_rho = %zu\n", E->nLatRho);
+    //printf("xi_rho = %zu\n", E->nLatRho);
 
     // get the lon dimension sizes
     if((retval = nc_inq_dimid(ncid, "eta_rho", &varid)))
@@ -65,7 +65,7 @@ void process_roms(e *E){
     if((retval = nc_inq_dimlen(ncid,varid,&E->nLonRho)))
         fail("failed to read roms lon_rho data: error is %d\n",retval);
 
-    printf("eta_rho = %zu\n", E->nLonRho);
+    //printf("eta_rho = %zu\n", E->nLonRho);
 
     // malloc room for the arrays
 	E->romsTime = malloc(E->nTimeRoms*sizeof(double));
@@ -90,9 +90,9 @@ void process_roms(e *E){
 	E->roms_time_units = (char *) malloc(attlen + 1);  /* + 1 for trailing null */
 	E->roms_time_units[attlen] = '\x0';
 	nc_get_att_text(ncid, varid, "units", E->roms_time_units);
-	printf("units = %s\n", E->roms_time_units);
+	//printf("units = %s\n", E->roms_time_units);
 
-	printf("romsTime[0] = %f\n", E->romsTime[0]);
+	//printf("romsTime[0] = %f\n", E->romsTime[0]);
 	// Make the Calendar calls
     //tval = 86460.0;	/* in seconds, this is 1 day and 1 minute */
     //tval = 8580;
@@ -107,7 +107,7 @@ void process_roms(e *E){
         fprintf( stderr, "Error on utCalendar2_cal call: %d\n", ierr );
         exit(-1);
         }
-    printf( "this date is %04d-%02d-%02d %02d:%02d:%06.3lf\n",yr, mo, day, hr, min, sec );
+    //printf( "this date is %04d-%02d-%02d %02d:%02d:%06.3lf\n",yr, mo, day, hr, min, sec );
 
 
 
@@ -118,13 +118,13 @@ void process_roms(e *E){
     if((retval = nc_get_var_double(ncid, varid, &E->lat_rho[0][0])))
 		fail("failed to read roms lat_rho data: error is %d\n", retval);
 
-		printf("lat_rho[0][0] = %f\n", E->lat_rho[0][0]);
+		//printf("lat_rho[0][0] = %f\n", E->lat_rho[0][0]);
 
     nc_inq_varid(ncid, "lon_rho", &varid);
     if((retval = nc_get_var_double(ncid, varid, &E->lon_rho[0][0])))
 		fail("failed to read roms lat_rho data: error is %d\n", retval);
 
-	printf("lon_rho[0][0] = %f\n", E->lon_rho[0][0]);
+	//printf("lon_rho[0][0] = %f\n", E->lon_rho[0][0]);
 
 	// get the rho_mask
 	nc_inq_varid(ncid, "mask_rho", &varid);
@@ -159,9 +159,9 @@ void process_roms(e *E){
 		}
 	}
 
-    printf("spatial bounds from roms file:\n");
-    printf("\tlon: %f to %f\n", E->roms_min_lon, E->roms_max_lon);
-    printf("\tlat: %f to %f\n", E->roms_min_lat, E->roms_max_lat);
+    //printf("spatial bounds from roms file:\n");
+    //printf("\tlon: %f to %f\n", E->roms_min_lon, E->roms_max_lon);
+    //printf("\tlat: %f to %f\n", E->roms_min_lat, E->roms_max_lat);
 
 
 
@@ -169,8 +169,8 @@ void process_roms(e *E){
     E->coastline_mask = malloc2d_double(E->nLonRho, E->nLatRho);
 	padded_mask = malloc2d_double(E->nLonRho+2, E->nLatRho+2);
 	// initialize the field to be fill_value everywhere
-	printf("i size nLatRho = %d\n", E->nLatRho);
-	printf("j size nLonRho = %d\n", E->nLonRho);
+	//printf("i size nLatRho = %d\n", E->nLatRho);
+	//printf("j size nLonRho = %d\n", E->nLonRho);
 
 	for(i=0;i<E->nLonRho+2;i++){
 		for(j=0;j<E->nLatRho+2;j++){

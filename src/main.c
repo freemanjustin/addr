@@ -18,17 +18,16 @@ int main(int argc,char **argv)
 	int retval;
 	size_t attlen = 0;
 
-
-
-
-
 	// malloc the work struct
 	E = malloc(sizeof(e));
 	if(E==NULL) fail("Malloc failed\n");
 
 	// parse command line arguments
 	if(argc < 3){
-		fail("need an input xml file and an output filename\n");
+		printf("usage:\n");
+		printf("\taddr [roms history netcdf file] [tide netcdf file] [auswave netcdf file] [output filename]\n");
+		printf("\n\tauswave data must include Hs and Tp\n");
+		exit(1);
 	}
 	else{
 		get_command_line_arg_as_string(&E->roms_input, argv[1]);
@@ -37,11 +36,10 @@ int main(int argc,char **argv)
 		get_command_line_arg_as_string(&E->fname, argv[4]);
 	}
 
-
-	printf("roms file = %s\n", E->roms_input);
-	printf("tide file = %s\n", E->tide_input);
-	printf("wave setup file = %s\n", E->wave_input);
-	printf("outputfile = %s\n", E->fname);
+	//printf("roms file = %s\n", E->roms_input);
+	//printf("tide file = %s\n", E->tide_input);
+	//printf("wave setup file = %s\n", E->wave_input);
+	//printf("outputfile = %s\n", E->fname);
 
 	// initialize the time converison libs
 	// Initialize the udunits-2 library
@@ -68,12 +66,14 @@ int main(int argc,char **argv)
 
 	// write the interpolated field to file
 	//write_netcdf(E);
-	printf("writing coastal data...");
+	//printf("writing coastal data...");
 	write_coastal_data(E);
-	printf("done\n");
+	//printf("done\n");
 
 	// write out time series data for each coastal point
+	#ifdef CHECK
 	write_time_series(E);
+	#endif
 
 	/*
 	// write out the interped field coming from the natural neighbor interpolation

@@ -32,7 +32,7 @@ void process_tides(e *E){
     if((retval = nc_inq_dimlen(ncid,varid,&E->nLatTide)))
         fail("failed to get tide lat dim length: error is %d\n",retval);
 
-    printf("lat = %zu\n", E->nLatTide);
+    //printf("lat = %zu\n", E->nLatTide);
 
     // get the lon dimension sizes
     if((retval = nc_inq_dimid(ncid, "lon", &varid)))
@@ -41,7 +41,7 @@ void process_tides(e *E){
     if((retval = nc_inq_dimlen(ncid,varid,&E->nLonTide)))
         fail("failed to read tide lon dim length: error is %d\n",retval);
 
-    printf("tide lon = %zu\n", E->nLonTide);
+    //printf("tide lon = %zu\n", E->nLonTide);
 
     // process the spatial dimensions
     E->tideLon = malloc(E->nLonTide*sizeof(double));
@@ -67,7 +67,7 @@ void process_tides(e *E){
         if(E->tideLat[i] > (E->roms_max_lat+0.15))
             lat_end = i;
     }
-    printf("tide data start lat = %f (%d), end lat = %f (%d)\n", E->tideLat[lat_start],lat_start, E->tideLat[lat_end],lat_end);
+    //printf("tide data start lat = %f (%d), end lat = %f (%d)\n", E->tideLat[lat_start],lat_start, E->tideLat[lat_end],lat_end);
     int lon_start;
     for(i=0;i<E->nLonTide;i++){
         if(E->tideLon[i] < (E->roms_min_lon-0.15))
@@ -79,7 +79,7 @@ void process_tides(e *E){
             lon_end = i;
     }
 
-    printf("tide data start lon = %f, end lon = %f\n", E->tideLon[lon_start], E->tideLon[lon_end]);
+    //printf("tide data start lon = %f, end lon = %f\n", E->tideLon[lon_start], E->tideLon[lon_end]);
 
     // TODO: add some error checking to the bounds code.
     // for example, if the spatial extent does not overlap then throw an exception
@@ -111,7 +111,7 @@ void process_tides(e *E){
     if((retval = nc_inq_dimlen(ncid,varid,&E->nLevTide)))
         fail("failed to read tide lon data: error is %d\n",retval);
 
-    printf("tide lev = %zu\n", E->nLevTide);
+    //printf("tide lev = %zu\n", E->nLevTide);
 
 	// get the time dimension sizes
     if((retval = nc_inq_dimid(ncid, "time", &varid)))
@@ -120,7 +120,7 @@ void process_tides(e *E){
     if((retval = nc_inq_dimlen(ncid,varid,&E->nTimeTide)))
         fail("failed to read tide time data: error is %d\n",retval);
 
-    printf("tide time = %zu\n", E->nTimeTide);
+    //printf("tide time = %zu\n", E->nTimeTide);
 
     // malloc room for the arrays
 	//(time, lev, lat, lon)
@@ -135,7 +135,7 @@ void process_tides(e *E){
 	E->tide_time_units = (char *) malloc(attlen + 1);  /* + 1 for trailing null */
 	nc_get_att_text(ncid, varid, "units", E->tide_time_units);
 	E->tide_time_units[attlen] = '\x0';
-	printf("tide time units = %s\n", E->tide_time_units);
+	//printf("tide time units = %s\n", E->tide_time_units);
 
 	// Make the Calendar calls
 	// Parse the units strings
@@ -199,8 +199,8 @@ void process_tides(e *E){
 		exit(1);
 	}
 
-	printf("Tide start index = %d\n", E->tide_start_time_index);
-	printf("Tide end index = %d\n", E->tide_end_time_index);
+	//printf("Tide start index = %d\n", E->tide_start_time_index);
+	//printf("Tide end index = %d\n", E->tide_end_time_index);
 
     E->nTimeTideSubset = (E->tide_end_time_index-E->tide_start_time_index+1);
 
@@ -239,7 +239,7 @@ void process_tides(e *E){
         }
     }
     #endif
-    
+
 	// do a natural neighbour interpolation on the tide data we just read in
 	// to fill in the land masked values before interpolating onto the ROMS grid
 
@@ -253,7 +253,7 @@ void process_tides(e *E){
 
 	E->tide_on_roms = malloc3d_double(E->nTimeTideSubset, E->nLonRho, E->nLatRho);
 
-	printf("(E->end_time_index-E->start_time_index) = %d\n", E->nTimeTideSubset);
+	//printf("(E->end_time_index-E->start_time_index) = %d\n", E->nTimeTideSubset);
 
 
 	// set up variables for the lib-nn calls
@@ -294,22 +294,22 @@ void process_tides(e *E){
         if(beenHere == FALSE){
             // figure out E->nx and E->ny
     		get_mesh_dimensions(E, E->nn_n, E->nn_diff);
-		    printf("nn interp field: nn_nx = %d, nn_ny = %d\n", E->nn_nx, E->nn_ny);
+		    //printf("nn interp field: nn_nx = %d, nn_ny = %d\n", E->nn_nx, E->nn_ny);
             beenHere = TRUE;
         }
 
-		printf("doing nn interpolation...\n"); fflush(stdout);
+		//printf("doing nn interpolation..."); fflush(stdout);
 		// E->n is the number of points in E->diff
 		// E->weight is a constant (equal to 0.0)
 
 		nn_interp_to_mesh(E, E->nn_n, E->nn_weight, E->nn_diff, E->nLonTide, E->nLatTide, E->nn_interp);
-		printf("done\n"); fflush(stdout);
+		//printf("done\n"); fflush(stdout);
 
 
 		// put the interpolated data into the tide array so we can write it out to
 		// a netcdf file
 		// interpolate the tide data for each lon_rho and lat_rho point
-		printf("t = %d\n", t);
+		//printf("t = %d\n", t);
 
 		// temporarily splat the nn_interped field over the original data
 		count = 0;
@@ -337,7 +337,7 @@ void process_tides(e *E){
     // time interp tide data to roms time
 
     // time interpolate the wavesetup data onto the roms time vector
-    printf("creating %d interpolated time levels for the tide field\n", E->nTimeRoms);
+    //printf("creating %d interpolated time levels for the tide field\n", E->nTimeRoms);
     E->tide_on_roms_time_interp = malloc3d_double(E->nTimeRoms, E->nLonRho, E->nLatRho);
     // initialize this array
     for(t=0;t<E->nTimeRoms;t++){

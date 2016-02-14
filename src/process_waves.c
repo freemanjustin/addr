@@ -40,7 +40,7 @@ void process_auswave(e *E){
     if((retval = nc_inq_dimlen(ncid,varid,&E->nTimeWaves)))
         fail("failed to get auswave lat dimlen: error is %d\n",retval);
 
-    printf("aus waves_times = %zu\n", E->nTimeWaves);
+    //printf("aus waves_times = %zu\n", E->nTimeWaves);
 
 	// get the auswave lat data
 	if((retval = nc_inq_dimid(ncid, "lat", &varid)))
@@ -49,7 +49,7 @@ void process_auswave(e *E){
     if((retval = nc_inq_dimlen(ncid,varid,&E->nLatWaves)))
         fail("failed to get auswave lat dimlen: error is %d\n",retval);
 
-    printf("auswave lat = %zu\n", E->nLatWaves);
+    //printf("auswave lat = %zu\n", E->nLatWaves);
 
 	// get the auswave lon data
 	if((retval = nc_inq_dimid(ncid, "lon", &varid)))
@@ -58,7 +58,7 @@ void process_auswave(e *E){
     if((retval = nc_inq_dimlen(ncid,varid,&E->nLonWaves)))
         fail("failed to get auswave lon dimlen: error is %d\n",retval);
 
-    printf("auswave lat = %zu\n", E->nLonWaves);
+    //printf("auswave lat = %zu\n", E->nLonWaves);
 
     // process spatial dimensions
     // malloc room for the dim variable arrays
@@ -87,7 +87,7 @@ void process_auswave(e *E){
         if(E->wavesLat[i] < (E->roms_max_lat+0.15))    // less than because auswave lat is monotonically decreasing
             lat_start = i;
     }
-    printf("wave data start lat = %f (%d), end lat = %f (%d)\n", E->wavesLat[lat_start],lat_start, E->wavesLat[lat_end],lat_end);
+    //printf("wave data start lat = %f (%d), end lat = %f (%d)\n", E->wavesLat[lat_start],lat_start, E->wavesLat[lat_end],lat_end);
     int lon_start;
     for(i=0;i<E->nLonWaves;i++){
         if(E->wavesLon[i] < (E->roms_min_lon-0.15))
@@ -99,7 +99,7 @@ void process_auswave(e *E){
             lon_end = i;
     }
 
-    printf("wave data start lon = %f, end lon = %f\n", E->wavesLon[lon_start], E->wavesLon[lon_end]);
+    //printf("wave data start lon = %f, end lon = %f\n", E->wavesLon[lon_start], E->wavesLon[lon_end]);
 
     // TODO: add some error checking to the bounds code.
     // for example, if the spatial extent does not overlap then throw an exception
@@ -137,9 +137,9 @@ void process_auswave(e *E){
 	E->waves_time_units = (char *) malloc(attlen + 1);  /* + 1 for trailing null */
 	E->waves_time_units[attlen] = '\x0';
 	nc_get_att_text(ncid, varid, "units", E->waves_time_units);
-	printf("waves time units = %s\n", E->waves_time_units);
+	//printf("waves time units = %s\n", E->waves_time_units);
 
-	printf("wavesTime[0] = %f\n", E->wavesTime[0]);
+	//printf("wavesTime[0] = %f\n", E->wavesTime[0]);
 	// Make the Calendar calls
     //tval = 86460.0;	/* in seconds, this is 1 day and 1 minute */
     //tval = 8580;
@@ -215,8 +215,8 @@ void process_auswave(e *E){
 		exit(1);
 	}
 
-	printf("start index = %d\n", E->waves_start_time_index);
-	printf("end index = %d\n", E->waves_end_time_index);
+	//printf("start index = %d\n", E->waves_start_time_index);
+	//printf("end index = %d\n", E->waves_end_time_index);
     E->nTimeWavesSubset = (E->waves_end_time_index - E->waves_start_time_index)+1;
     // malloc enough room for the variable arrays
     //sig_wav_ht(time, lat, lon)
@@ -243,14 +243,14 @@ void process_auswave(e *E){
     if((retval = nc_get_vara_double(ncid, varid, from, to, &E->Hs[0][0][0])))
         fail("failed to read waves Hs data: error is %d\n", retval);
 
-	printf("sig_wave_ht[0][0][0] = %f\n", E->Hs[0][0][0]);
+	//printf("sig_wave_ht[0][0][0] = %f\n", E->Hs[0][0][0]);
 
 	// get the peak period
 	nc_inq_varid(ncid, "pk_wav_per", &varid);
     if((retval = nc_get_vara_double(ncid, varid, from, to, &E->Tp[0][0][0])))
         fail("failed to read waves Hs data: error is %d\n", retval);
 
-	printf("pk_wav_per[0][0][0] = %f\n", E->Tp[0][0][0]);
+	//printf("pk_wav_per[0][0][0] = %f\n", E->Tp[0][0][0]);
 
 	// close the file
 	nc_close(ncid);
@@ -333,7 +333,7 @@ void process_auswave(e *E){
     E->Tp_on_roms = malloc3d_double(E->nTimeWavesSubset, E->nLonRho, E->nLatRho);
     // just for writing the netcdf file - trash this!
     //double *time_vector = malloc(E->nTimeWavesSubset*sizeof(double));
-    printf("(E->waves_end_time_index-E->waves_start_time_index) = %d\n", E->nTimeWavesSubset);
+    //printf("(E->waves_end_time_index-E->waves_start_time_index) = %d\n", E->nTimeWavesSubset);
 
 
     // set up variables for the lib-nn calls
@@ -380,15 +380,15 @@ void process_auswave(e *E){
             beenHere = TRUE;
         }
 
-        printf("doing nn interpolation (waves Hs)...\n"); fflush(stdout);
+        //printf("doing nn interpolation (waves Hs)...\n"); fflush(stdout);
         // E->n is the number of points in E->diff
         // E->weight is a constant (equal to 0.0)
 
         nn_interp_to_mesh(E, E->nn_n, E->nn_weight, E->nn_diff, E->nLonWaves, E->nLatWaves, E->nn_interp);
-        printf("done\n"); fflush(stdout);
+        //printf("done\n"); fflush(stdout);
 
         // interpolate the tide data for each lon_rho and lat_rho point
-        printf("t = %d\n", t);
+        //printf("t = %d\n", t);
 
         // temporarily splat the nn_interped field over the original data
         count = 0;
@@ -478,18 +478,18 @@ void process_auswave(e *E){
         // figure out E->nx and E->ny
         if(beenHere == FALSE){
             get_mesh_dimensions(E, E->nn_n, E->nn_diff);
-            printf("nn interp field (waves Tp): nn_nx = %d, nn_ny = %d\n", E->nn_nx, E->nn_ny);
+            //printf("nn interp field (waves Tp): nn_nx = %d, nn_ny = %d\n", E->nn_nx, E->nn_ny);
         }
 
-        printf("doing nn interpolation (waves Tp)...\n"); fflush(stdout);
+        //printf("doing nn interpolation (waves Tp)...\n"); fflush(stdout);
         // E->n is the number of points in E->diff
         // E->weight is a constant (equal to 0.0)
 
         nn_interp_to_mesh(E, E->nn_n, E->nn_weight, E->nn_diff, E->nLonWaves, E->nLatWaves, E->nn_interp);
-        printf("done\n"); fflush(stdout);
+        //printf("done\n"); fflush(stdout);
 
         // interpolate the tide data for each lon_rho and lat_rho point
-        printf("t = %d\n", t);
+        //printf("t = %d\n", t);
 
         // temporarily splat the nn_interped field over the original data
         count = 0;
@@ -545,7 +545,7 @@ void process_auswave(e *E){
     // to calculate setup, we need Hs, Tp and slope at coastal pointers
 
     // read in the slope data
-    printf("calculating wave setup...");
+    //printf("calculating wave setup...");
     get_coastal_slope(E);
 
     // malloc room for the setup field
@@ -579,7 +579,7 @@ void process_auswave(e *E){
 
 
 	for(t=0;t<E->nTimeWavesSubset;t++){
-		printf("#### t = %d\n",t);
+		//printf("#### t = %d\n",t);
 		for(i=0;i<E->nLonRho;i++){
 			for(j=0;j<E->nLatRho;j++){
 
@@ -607,10 +607,10 @@ void process_auswave(e *E){
 			}
 		}
 	}
-    printf("...done\n");
+    //printf("...done\n");
 
 	// time interpolate the wavesetup data onto the roms time vector
-    printf("creating %d interpolated time levels for the setup field\n", E->nTimeRoms);
+    //printf("creating %d interpolated time levels for the setup field\n", E->nTimeRoms);
     E->setup_on_roms_time_interp = malloc3d_double(E->nTimeRoms, E->nLonRho, E->nLatRho);
     // initialize this array
     for(t=0;t<E->nTimeRoms;t++){
@@ -670,8 +670,5 @@ double get_setup(double Hs, double Tp, double slope){
     L = 9.8*pow(Tp,2.0)/(2.0*M_PI);
     setup = (0.31)*(0.8)*Hs*(0.32*pow(slope,1.0/7.0))*pow((Hs/L),-0.25);
 
-    if(setup > 100.0){
-        printf("WTF?? setup = %f, Hs = %f, Tp = %f, slope = %f\n", setup, Hs, Tp, slope);
-    }
     return (setup);
 }
