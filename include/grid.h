@@ -368,9 +368,9 @@ void add_txt_attribute_netcdf(e *E, int, int, char*, char* );
 void add_global_metadata( e*, int );
 void write_data( e* );
 
-void get_params( e* );
-void _parseInputFile_params ( e*, xmlDocPtr, xmlNodePtr );
-void _parseInputFile_bathymetry( e*, xmlDocPtr, xmlNodePtr );
+//void get_params( e* );
+//void _parseInputFile_params ( e*, xmlDocPtr, xmlNodePtr );
+//void _parseInputFile_bathymetry( e*, xmlDocPtr, xmlNodePtr );
 
 // interp functions
 void init_xi_eta(e *E);
