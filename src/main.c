@@ -36,11 +36,11 @@ int main(int argc,char **argv)
 		get_command_line_arg_as_string(&E->fname, argv[4]);
 	}
 
-	//printf("roms file = %s\n", E->roms_input);
-	//printf("tide file = %s\n", E->tide_input);
-	//printf("wave setup file = %s\n", E->wave_input);
-	//printf("outputfile = %s\n", E->fname);
-
+	printf("roms file = %s\n", E->roms_input);
+	printf("tide file = %s\n", E->tide_input);
+	printf("wave setup file = %s\n", E->wave_input);
+	printf("outputfile = %s\n", E->fname);
+	fflush(stdout);
 	// initialize the time converison libs
 	// Initialize the udunits-2 library
 
@@ -53,22 +53,35 @@ int main(int argc,char **argv)
     ut_set_error_message_handler(ut_write_to_stderr);
 
 	// read in the roms input data
+	printf("processing ROMS grid information...");
 	process_roms(E);
+	printf("done\n");
+	fflush(stdout);
 
 	// get setup on roms grid
+	printf("processing AUSWAVE grid information...");
 	process_auswave(E);
+	printf("done\n");
+	fflush(stdout);
 
 	// get tide on roms grid
+	printf("processing tide grid information...");
 	process_tides(E);
+    printf("done\n");
+	fflush(stdout);	
 
 	// add the components
+	printf("adding...");
 	add(E);
+	printf("done\n");
+	fflush(stdout);
 
 	// write the interpolated field to file
 	//write_netcdf(E);
-	//printf("writing coastal data...");
+	printf("writing coastal data...");
 	write_coastal_data(E);
-	//printf("done\n");
+	printf("done\n");
+	fflush(stdout);
 
 	// write out time series data for each coastal point
 	#ifdef CHECK
