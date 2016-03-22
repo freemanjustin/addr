@@ -238,8 +238,8 @@ void process_auswave(e *E){
 	//	fail("failed to read waves setup data: error is %d\n", retval);
 
     from[0] = E->waves_start_time_index;    to[0] = E->nTimeWavesSubset;
-    from[1] = 0;                            to[1] = E->nLatWaves;
-    from[2] = 0;                            to[2] = E->nLonWaves;
+    from[1] = lat_start;                    to[1] = lat_end - lat_start;
+    from[2] = lon_start;                    to[2] = lon_end - lon_start;
     if((retval = nc_get_vara_double(ncid, varid, from, to, &E->Hs[0][0][0])))
         fail("failed to read waves Hs data: error is %d\n", retval);
 
