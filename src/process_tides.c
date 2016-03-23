@@ -218,8 +218,8 @@ void process_tides(e *E){
 
     from[0] = E->tide_start_time_index;     to[0] = E->nTimeTideSubset;
     from[1] = 0;                            to[1] = E->nLevTide;
-    from[2] = 0;                            to[2] = E->nLatTide;
-    from[3] = 0;                            to[3] = E->nLonTide;
+    from[2] = lat_start;                    to[2] = lat_end - lat_start; //E->nLatTide;
+    from[3] = lon_start;                    to[3] = lon_end - lon_start; //E->nLonTide;
 
     nc_inq_varid(ncid, "z", &varid);
     // should only read in the data we need
@@ -313,8 +313,10 @@ void process_tides(e *E){
 
 		// temporarily splat the nn_interped field over the original data
 		count = 0;
+		double *interp_write = malloc(E->nLonTide * E->nLatTide * sizeof(double));
 		for(i=0;i<E->nLatTide;i++){
 			for(j=0;j<E->nLonTide;j++){
+				interp_write[count] = E->nn_interp[count].z;
 				E->tide_data[t][0][i][j] = E->nn_interp[count].z;
 				count++;
 			}
