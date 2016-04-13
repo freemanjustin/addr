@@ -21,7 +21,6 @@ void add(e *E){
 		    for(j=0;j<E->nLatRho;j++){
                 if(E->setup_on_roms_time_interp[t][i][j] != NC_FILL_DOUBLE){
                     E->added[t][i][j] = E->setup_on_roms_time_interp[t][i][j] +
-                                        E->tide_on_roms_time_interp[t][i][j] +
                                         E->zeta_coast[t][i][j];
                 }
             }

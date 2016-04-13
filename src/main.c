@@ -23,21 +23,20 @@ int main(int argc,char **argv)
 	if(E==NULL) fail("Malloc failed\n");
 
 	// parse command line arguments
-	if(argc < 3){
+	if(argc < 4){
 		printf("usage:\n");
-		printf("\taddr [roms history netcdf file] [tide netcdf file] [auswave netcdf file] [output filename]\n");
+		printf("\taddr [roms history netcdf file] [auswave netcdf file] [output filename]\n");
 		printf("\n\tauswave data must include Hs and Tp\n");
 		exit(1);
 	}
 	else{
 		get_command_line_arg_as_string(&E->roms_input, argv[1]);
-		get_command_line_arg_as_string(&E->tide_input, argv[2]);
-		get_command_line_arg_as_string(&E->wave_input, argv[3]);
-		get_command_line_arg_as_string(&E->fname, argv[4]);
+		get_command_line_arg_as_string(&E->wave_input, argv[2]);
+		get_command_line_arg_as_string(&E->fname, argv[3]);
 	}
 
+	printf("\n\n**** running the notide branch ****\n\n");
 	printf("roms file = %s\n", E->roms_input);
-	printf("tide file = %s\n", E->tide_input);
 	printf("wave setup file = %s\n", E->wave_input);
 	printf("outputfile = %s\n", E->fname);
 	fflush(stdout);
@@ -63,12 +62,6 @@ int main(int argc,char **argv)
 	process_auswave(E);
 	printf("done\n");
 	fflush(stdout);
-
-	// get tide on roms grid
-	printf("processing tide grid information...");
-	process_tides(E);
-    printf("done\n");
-	fflush(stdout);	
 
 	// add the components
 	printf("adding...");

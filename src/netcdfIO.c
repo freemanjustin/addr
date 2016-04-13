@@ -180,8 +180,8 @@ void write_coastal_data(e *E) {
 	int ocean_time_varid;
 
 	// set the compression parameters
-    int shuffle = 1;    
-    int deflate = 1; 
+    int shuffle = 1;
+    int deflate = 1;
     int deflate_level = 1;
 
 	// create the file
@@ -268,11 +268,12 @@ void write_coastal_data(e *E) {
 
 	*/
 
-
+	/*
 	nc_def_var(ncid, "tide", NC_DOUBLE, 3, dimIds3d, &tide_coast_varid);
 	// define the compression options for this variable
     nc_def_var_deflate(ncid, tide_coast_varid, shuffle, deflate, deflate_level);
 	nc_put_att_text(ncid, tide_coast_varid, "coordinates", strlen("lat_rho lon_rho"), "lat_rho lon_rho");
+	*/
 
 	nc_enddef(ncid);
 	// write the data
@@ -289,7 +290,7 @@ void write_coastal_data(e *E) {
 	//nc_put_var_double(ncid, Hs_coast_varid, &E->Hs_on_roms[0][0][0]);
 	//nc_put_var_double(ncid, Tp_coast_varid, &E->Tp_on_roms[0][0][0]);
 
-	nc_put_var_double(ncid, tide_coast_varid, &E->tide_on_roms_time_interp[0][0][0]);
+	//nc_put_var_double(ncid, tide_coast_varid, &E->tide_on_roms_time_interp[0][0][0]);
 
 	nc_put_var_double(ncid, added_coast_varid, &E->added[0][0][0]);
 
