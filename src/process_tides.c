@@ -58,24 +58,27 @@ void process_tides(e *E){
     // get spatial bounds
     // find the dimension indexes that cover the spatial region we need
     int lat_start;
+    double dLatTide, dLonTide;
+    dLatTide = fabs(E->tideLat[1] - E->tideLat[0])*2.0;
+    dLonTide = fabs(E->tideLon[1] - E->tideLon[0])*2.0;
     for(i=0;i<E->nLatTide;i++){
-        if(E->tideLat[i] < (E->roms_min_lat-0.15))
+        if(E->tideLat[i] < (E->roms_min_lat-dLatTide))
             lat_start = i;
     }
     int lat_end;
     for(i=E->nLatTide-1;i>=0;i--){
-        if(E->tideLat[i] > (E->roms_max_lat+0.15))
+        if(E->tideLat[i] > (E->roms_max_lat+dLatTide))
             lat_end = i;
     }
     //printf("tide data start lat = %f (%d), end lat = %f (%d)\n", E->tideLat[lat_start],lat_start, E->tideLat[lat_end],lat_end);
     int lon_start;
     for(i=0;i<E->nLonTide;i++){
-        if(E->tideLon[i] < (E->roms_min_lon-0.15))
+        if(E->tideLon[i] < (E->roms_min_lon-dLonTide))
             lon_start = i;
     }
     int lon_end;
     for(i=E->nLonTide-1;i>=0;i--){
-        if(E->tideLon[i] > (E->roms_max_lon+0.15))
+        if(E->tideLon[i] > (E->roms_max_lon+dLonTide))
             lon_end = i;
     }
 

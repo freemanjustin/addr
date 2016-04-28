@@ -78,24 +78,27 @@ void process_auswave(e *E){
 
     // find the dimension indexes that cover the spatial region we need
     int lat_end;
+    double dLatWaves, dLonWaves;	// grid spacings for lat, lon for auswave
+    dLatWaves = fabs(E->wavesLat[1] - E->wavesLat[0])*2.0;
+    dLonWaves = fabs(E->wavesLon[1] - E->wavesLon[0])*2.0;
     for(i=0;i<E->nLatWaves;i++){
-        if(E->wavesLat[i] > (E->roms_min_lat-0.15))    // greater than because auswave lat is monotonically decreasing
+        if(E->wavesLat[i] > (E->roms_min_lat-dLatWaves))    // greater than because auswave lat is monotonically decreasing
             lat_end = i;
     }
     int lat_start;
     for(i=E->nLatWaves-1;i>=0;i--){
-        if(E->wavesLat[i] < (E->roms_max_lat+0.15))    // less than because auswave lat is monotonically decreasing
+        if(E->wavesLat[i] < (E->roms_max_lat+dLatWaves))    // less than because auswave lat is monotonically decreasing
             lat_start = i;
     }
     //printf("wave data start lat = %f (%d), end lat = %f (%d)\n", E->wavesLat[lat_start],lat_start, E->wavesLat[lat_end],lat_end);
     int lon_start;
     for(i=0;i<E->nLonWaves;i++){
-        if(E->wavesLon[i] < (E->roms_min_lon-0.15))
+        if(E->wavesLon[i] < (E->roms_min_lon-dLonWaves))
             lon_start = i;
     }
     int lon_end;
     for(i=E->nLonWaves-1;i>=0;i--){
-        if(E->wavesLon[i] > (E->roms_max_lon+0.15))
+        if(E->wavesLon[i] > (E->roms_max_lon+dLonWaves))
             lon_end = i;
     }
 
