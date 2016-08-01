@@ -35,7 +35,7 @@
 #include "delaunay.h"
 
 // macros
-#define	TRUE 1
+#define TRUE 1
 #define FALSE 0
 
 
@@ -52,112 +52,121 @@
 
 
 // interpolation structs
-typedef struct{
-	double	node_coord[4][2];
-	double	node_value[4];
-	double	interp_weights[4];
+typedef struct {
+	double node_coord[4][2];
+	double node_value[4];
+	double interp_weights[4];
 }element;
 
-typedef struct{
-	double	*x;
-	double	*y;
+typedef struct {
+	double *x;
+	double *y;
 }mesh;
 
 
 // grid parameters
-typedef struct{
-    double  lat;        // Latitude  (degrees) of the bottom-left corner of the grid.
-    double  lon;        // Longitude (degrees) of the bottom-left corner of the grid.
+typedef struct {
+	double lat;     // Latitude  (degrees) of the bottom-left corner of the grid.
+	double lon;     // Longitude (degrees) of the bottom-left corner of the grid.
 
-    double  X;          // Width of domain (meters)
-    double  Y;          // Length of domain (meters)
-    double  rotangle;   // Angle (degrees) to rotate the grid conterclock-wise
-    double  resol;      // Cell width and height (i.e. Resolution)in meters. Grid cells are forced to be (almost) square.
-    int     N;          // Number of vertical levels
+	double X;       // Width of domain (meters)
+	double Y;       // Length of domain (meters)
+	double rotangle; // Angle (degrees) to rotate the grid conterclock-wise
+	double resol;   // Cell width and height (i.e. Resolution)in meters. Grid cells are forced to be (almost) square.
+	int N;          // Number of vertical levels
 
-    int     nX;         // number of X
-    int     nY;         // number of Y
+	int nX;         // number of X
+	int nY;         // number of Y
 
-    char    *Grid_filename;
+	char    *Grid_filename;
 }grid;
 
 // bethymetry netcdf params
-typedef struct{
-    char    *fname;
-    char    *lat_name;
-    char    *lon_name;
-    char    *field_name;
+typedef struct {
+	char    *fname;
+	char    *lat_name;
+	char    *lon_name;
+	char    *field_name;
 
-    double  **field;
-    double  *lat;
-    double  *lon;
+	double  **field;
+	double  *lat;
+	double  *lon;
 
-    double  min_depth;
+	double min_depth;
 
-    // index variables
-    size_t      nlat;
-    size_t      nlon;
-
-
+	// index variables
+	size_t nlat;
+	size_t nlon;
 }bathymetry;
 
-typedef struct{
+typedef struct {
 
 	char    *input_xml;
-	char	*roms_input;
-	char	*tide_input;
-	char	*wave_input;
+	char *roms_input;
+	char *tide_input;
+	char *wave_input;
 
-    char    *fname;
-    grid    g;
-    bathymetry b;
+	char    *fname;
+	grid g;
+	bathymetry b;
 
-    // output grid parameters
-    int     one;
+	// output grid parameters
+	int one;
 
-    char    spherical[1];
+	char spherical[1];
 
-    double  *x,*y;
-    double  **x_rho, **y_rho;
-    int     Lm,Mm,Lp,Mp, L, M;
-    int     i,j;
-    double  latdist;
+	double  *x,*y;
+	double  **x_rho, **y_rho;
+	int Lm,Mm,Lp,Mp, L, M;
+	int i,j;
+	double latdist;
 
-    double  el, xl;
+	double el, xl;
 
-    double  **pm, **pn;
-    double  **dndx;
-    double  **dmde;
-    double  **f;
-    double  **h;    // bathymetry on rho grid
+	double  **pm, **pn;
+	double  **dndx;
+	double  **dmde;
+	double  **f;
+	double  **h;// bathymetry on rho grid
 
 	// libnn stuff for addr
 	// nn interp controls
-	int			nn_nx;
-	int			nn_ny;
-	double		nn_dx;
-	double		nn_dy;
-	double		nn_weight;
+	int nn_nx;
+	int nn_ny;
+	double nn_dx;
+	double nn_dy;
+	double nn_weight;
 	// the number of data points we have
-	int			nn_n;
-	int			have_min_lat;
-	int			have_max_lat;
-	int			have_min_lon;
-	int			have_max_lon;
+	int nn_n;
+	int have_min_lat;
+	int have_max_lat;
+	int have_min_lon;
+	int have_max_lon;
 
 	// internal variables
-	point		*nn_diff;
-	point		*nn_interp;
-	NN_RULE		nn_rule;
+	point  *nn_diff;
+	point  *nn_interp;
+	NN_RULE nn_rule;
+	delaunay *d;
 
-	int		nn_have_min_lat;
-	int		nn_have_max_lat;
-	int		nn_have_min_lon;
-	int		nn_have_max_lon;
-	double	min_lat;
-	double	max_lat;
-	double	min_lon;
-	double	max_lon;
+	int nn_have_min_lat;
+	int nn_have_max_lat;
+	int nn_have_min_lon;
+	int nn_have_max_lon;
+	double min_lat;
+	double max_lat;
+	double min_lon;
+	double max_lon;
+
+	// optimized libnn vars
+	int			nin;
+	int			nout;
+	point		*pin;
+	double	*zin;
+	double	*xout;
+	double	*yout;
+	double	*zout;
+	nnai* 	nn;
 
 	// end of lib_nn stuff
 
@@ -165,67 +174,67 @@ typedef struct{
 	// addr stuff
 
 	// for roms
-	size_t		nLonRho;
-	size_t		nLatRho;
-	size_t		nTimeRoms;
-	double		roms_min_lat;
-	double		roms_min_lon;
-	double		roms_max_lat;
-	double		roms_max_lon;
+	size_t nLonRho;
+	size_t nLatRho;
+	size_t nTimeRoms;
+	double roms_min_lat;
+	double roms_min_lon;
+	double roms_max_lat;
+	double roms_max_lon;
 
 	// for tides
-	size_t	nLonTide;
-	size_t	nLatTide;
-	size_t	nLevTide;
-	size_t	nTimeTide;
-	size_t	nTimeTideSubset;
+	size_t nLonTide;
+	size_t nLatTide;
+	size_t nLevTide;
+	size_t nTimeTide;
+	size_t nTimeTideSubset;
 
 	// for wave setup
-	size_t	nTimeWaves;
-	size_t  nLonWaves;
-	size_t	nLatWaves;
-	size_t	nTimeWavesSubset;
+	size_t nTimeWaves;
+	size_t nLonWaves;
+	size_t nLatWaves;
+	size_t nTimeWavesSubset;
 
 
 
-	char	*roms_time_units;
-	char	*tide_time_units;
-	char	*waves_time_units;
+	char *roms_time_units;
+	char *tide_time_units;
+	char *waves_time_units;
 	double  *tide_interp_time;
-	double	*waves_interp_time;
-	double	*tideLon;
-	double	*tideLat;
-	double	*tideTime;
-	double	*romsTime;
+	double *waves_interp_time;
+	double *tideLon;
+	double *tideLat;
+	double *tideTime;
+	double *romsTime;
 	double  **lat_rho;
 	double  **lon_rho;
 
-	double	*wavesLat;
-	double	*wavesLon;
-	double	*wavesTime;
-	double	***Hs;
-	double	***Tp;
+	double *wavesLat;
+	double *wavesLon;
+	double *wavesTime;
+	double ***Hs;
+	double ***Tp;
 
-	double	**setup;
-	double	****tide_data;
-	double	***tide_on_roms;
-	double	***tide_on_roms_time_interp;
-	double	***Hs_on_roms;
-	double	***Tp_on_roms;
-	double	**coastline_mask;
-	double	***zeta_coast;
-	double	***setup_on_roms;
-	double	***setup_on_roms_time_interp;
+	double **setup;
+	double ****tide_data;
+	double ***tide_on_roms;
+	double ***tide_on_roms_time_interp;
+	double ***Hs_on_roms;
+	double ***Tp_on_roms;
+	double **coastline_mask;
+	double ***zeta_coast;
+	double ***setup_on_roms;
+	double ***setup_on_roms_time_interp;
 
-	double	***zeta;
+	double ***zeta;
 
-	double	***added;
+	double ***added;
 
 	// for the time normalization stuff
 	// for time conversion
 	char calendar[9];
-    ut_system	*u_system;
-	ut_unit	*roms_ref_time;
+	ut_system *u_system;
+	ut_unit *roms_ref_time;
 	ut_unit *tide_ref_time;
 	ut_unit *waves_ref_time;
 
@@ -237,10 +246,10 @@ typedef struct{
 	double end_time_roms;
 
 	// for the slope data
-	size_t	nSlopes;
-	double	*slopeLon;
-	double	*slopeLat;
-	double	*slope;
+	size_t nSlopes;
+	double *slopeLon;
+	double *slopeLat;
+	double *slope;
 
 
 
@@ -249,97 +258,97 @@ typedef struct{
 
 	// can probably remove these ones left over from gridr
 
-    double  **Rx_rho;
-    double  **Ry_rho;
+	double  **Rx_rho;
+	double  **Ry_rho;
 
 
-    double  **x_u,**y_u;
-    double  **x_v,**y_v;
-    double  **x_psi,**y_psi;
-    double  **Rx_u,**Ry_u;
-    double  **Rx_v,**Ry_v;
-    double  **Rx_psi,**Ry_psi;
-    double  **lat_u, **lon_u;
-    double  **lat_v, **lon_v;
-    double  **lat_psi, **lon_psi;
-    double  **mask_rho;
-    double  **mask_u;
-    double  **mask_v;
-    double  **mask_psi;
-    double  **angle;
+	double  **x_u,**y_u;
+	double  **x_v,**y_v;
+	double  **x_psi,**y_psi;
+	double  **Rx_u,**Ry_u;
+	double  **Rx_v,**Ry_v;
+	double  **Rx_psi,**Ry_psi;
+	double  **lat_u, **lon_u;
+	double  **lat_v, **lon_v;
+	double  **lat_psi, **lon_psi;
+	double  **mask_rho;
+	double  **mask_u;
+	double  **mask_v;
+	double  **mask_psi;
+	double  **angle;
 
-    // netcdf params
-    int ncid;
-    int retval;
-    int dimIdsRho[NC_MAX_VAR_DIMS];
-    int dimIdsU[NC_MAX_VAR_DIMS];
-    int dimIdsV[NC_MAX_VAR_DIMS];
-    int dimIdsPsi[NC_MAX_VAR_DIMS];
-    int dimIdsOne[NC_MAX_VAR_DIMS];
+	// netcdf params
+	int ncid;
+	int retval;
+	int dimIdsRho[NC_MAX_VAR_DIMS];
+	int dimIdsU[NC_MAX_VAR_DIMS];
+	int dimIdsV[NC_MAX_VAR_DIMS];
+	int dimIdsPsi[NC_MAX_VAR_DIMS];
+	int dimIdsOne[NC_MAX_VAR_DIMS];
 	int dimIdsTide[NC_MAX_VAR_DIMS];
 
-    // dimensions
-    int xi_rho_dimid;
-    int xi_u_dimid;
-    int xi_v_dimid;
-    int xi_psi_dimid;
-    int eta_rho_dimid;
-    int eta_u_dimid;
-    int eta_v_dimid;
-    int eta_psi_dimid;
-	int	ocean_time_dimid;
-    int one_dimid;
+	// dimensions
+	int xi_rho_dimid;
+	int xi_u_dimid;
+	int xi_v_dimid;
+	int xi_psi_dimid;
+	int eta_rho_dimid;
+	int eta_u_dimid;
+	int eta_v_dimid;
+	int eta_psi_dimid;
+	int ocean_time_dimid;
+	int one_dimid;
 
-    // variable ids
+	// variable ids
 	// addr tide variable id
 	int vid_tide;
 	int vid_ocean_time;
 
-    int vid_angle;
-    int vid_dmde;
-    int vid_dndx;
-    int vid_el;
-    int vid_f;
-    int vid_h;
-    int vid_lat_rho;
-    int vid_lat_psi;
-    int vid_lat_u;
-    int vid_lat_v;
+	int vid_angle;
+	int vid_dmde;
+	int vid_dndx;
+	int vid_el;
+	int vid_f;
+	int vid_h;
+	int vid_lat_rho;
+	int vid_lat_psi;
+	int vid_lat_u;
+	int vid_lat_v;
 
-    int vid_lon_rho;
-    int vid_lon_psi;
-    int vid_lon_u;
-    int vid_lon_v;
+	int vid_lon_rho;
+	int vid_lon_psi;
+	int vid_lon_u;
+	int vid_lon_v;
 
-    int vid_mask_rho;
-    int vid_mask_psi;
-    int vid_mask_u;
-    int vid_mask_v;
+	int vid_mask_rho;
+	int vid_mask_psi;
+	int vid_mask_u;
+	int vid_mask_v;
 
-    int vid_pm;
-    int vid_pn;
-    int vid_spherical;
-    int vid_xl;
-    int vid_X;
-    int vid_Y;
-    int vid_dx;
-    int vid_dy;
+	int vid_pm;
+	int vid_pn;
+	int vid_spherical;
+	int vid_xl;
+	int vid_X;
+	int vid_Y;
+	int vid_dx;
+	int vid_dy;
 
 
-    //interp vars
-    int		nElements;
-	int		nodesPerEl;
-	int		nx;
-	int		ny;
+	//interp vars
+	int nElements;
+	int nodesPerEl;
+	int nx;
+	int ny;
 
 	// anti-clockwise element numbering
-	double	xi[4];
-	double	eta[4];
+	double xi[4];
+	double eta[4];
 
-	double	pos[2];
+	double pos[2];
 
-	element	*ele;
-	mesh	msh;
+	element *ele;
+	mesh msh;
 
 }e;
 
@@ -377,7 +386,7 @@ void init_xi_eta(e *E);
 void calculate_interpolation_weights(element*, double*, double*, double*);
 void interpolate_point(element*, double*);
 void store_mesh(e*, int, int );
-int	get_owner_element(e*, double*);
+int get_owner_element(e*, double*);
 double evaluate_linear_quad_shape_function( double*, double*, double *, int );
 double relative_difference(double, double);
 void interp_bathy_on_grid(e*);

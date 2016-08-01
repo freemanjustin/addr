@@ -68,7 +68,8 @@ int main(int argc,char **argv)
 	printf("processing tide grid information...");
 	process_tides(E);
     printf("done\n");
-	fflush(stdout);	
+	fflush(stdout);
+
 
 	// add the components
 	printf("adding...");
@@ -87,6 +88,8 @@ int main(int argc,char **argv)
 	#ifdef CHECK
 	write_time_series(E);
 	#endif
+
+
 
 	/*
 	// write out the interped field coming from the natural neighbor interpolation

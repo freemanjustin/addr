@@ -1,7 +1,7 @@
 #include "grid.h"
 
 void nn_interp_to_mesh(e *E, int n, double weight, point *pin, int nx, int ny, point *interp){
-
+//nn_interp_to_mesh(E, E->nn_n, E->nn_weight, E->nn_diff, E->nLonWaves, E->nLatWaves, E->nn_interp);
 
 	double	xmin = NaN;
 	double	xmax = NaN;
