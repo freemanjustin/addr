@@ -240,8 +240,8 @@ void process_tides(e *E){
         E->tide_on_roms = malloc3d_double(E->nTimeTideSubset, E->nLonRho, E->nLatRho);
 
         // nn optimized working arrays
-        E->pin = malloc(E->nLonWaves * E->nLatWaves * sizeof(point));
-        E->zin = malloc(E->nLonWaves * E->nLatWaves * sizeof(double));
+        E->pin = malloc(E->nLonTide * E->nLatTide * sizeof(point));
+        E->zin = malloc(E->nLonTide * E->nLatTide * sizeof(double));
 
         E->xout = malloc(E->nLonRho * E->nLatRho * sizeof(double));
         E->yout = malloc(E->nLonRho * E->nLatRho * sizeof(double));
