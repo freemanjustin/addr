@@ -29,7 +29,6 @@ COBJ=	$(CSRC)main.o \
 	$(CSRC)interp.o \
 	$(CSRC)calcalcs.o \
 	$(CSRC)utCalendar2_cal.o \
-	$(CSRC)nnutil.o \
 	$(CSRC)process_roms.o \
 	$(CSRC)process_tides.o \
 	$(CSRC)process_waves.o \
