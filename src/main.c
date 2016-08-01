@@ -53,35 +53,35 @@ int main(int argc,char **argv)
     ut_set_error_message_handler(ut_write_to_stderr);
 
 	// read in the roms input data
-	printf("processing ROMS grid information...");
+	printf("processing ROMS grid information...");fflush(stdout);
 	process_roms(E);
-	printf("done\n");
+	printf("done\n");fflush(stdout);
 	fflush(stdout);
 
 	// get setup on roms grid
-	printf("processing AUSWAVE grid information...");
+	printf("processing AUSWAVE grid information...");fflush(stdout);
 	process_auswave(E);
-	printf("done\n");
+	printf("done\n");fflush(stdout);
 	fflush(stdout);
 
 	// get tide on roms grid
-	printf("processing tide grid information...");
+	printf("processing tide grid information...");fflush(stdout);
 	process_tides(E);
-    printf("done\n");
+    printf("done\n");fflush(stdout);
 	fflush(stdout);
 
 
 	// add the components
-	printf("adding...");
+	printf("adding...");fflush(stdout);
 	add(E);
-	printf("done\n");
+	printf("done\n");fflush(stdout);
 	fflush(stdout);
 
 	// write the interpolated field to file
 	//write_netcdf(E);
-	printf("writing coastal data...");
+	printf("writing coastal data...");fflush(stdout);
 	write_coastal_data(E);
-	printf("done\n");
+	printf("done\n");fflush(stdout);
 	fflush(stdout);
 
 	// write out time series data for each coastal point

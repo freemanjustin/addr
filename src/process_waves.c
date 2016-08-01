@@ -508,6 +508,9 @@ void process_auswave(e *E){
   free(E->yout);
   free(E->zout);
 
+  free(E->d);
+  free(E->nn);
+
   //printf("done nn interp for waves\n");
 
   // estimate wave setup on roms

@@ -352,6 +352,9 @@ void process_tides(e *E){
         free(E->yout);
         free(E->zout);
 
+        free(E->d);
+        free(E->nn);
+
         // time interp tide data to roms time
 
         // time interpolate the wavesetup data onto the roms time vector
