@@ -540,7 +540,7 @@ void process_auswave(e *E){
                           // get longitude and latitude of the point
                           this_time = t;
                           this_lat = E->lat_rho[i][j];
-                          this_lon = E->lon_rho[i][j];
+                          this_lon = E->lat_rho[i][j];
                           nearest_index[i][j] = get_nearest_slope_index(E, this_lat, this_lon, E->slopeLat, E->slopeLon);
                   }
                   else{
@@ -565,8 +565,12 @@ void process_auswave(e *E){
                                      E->setup_on_roms[t][i][j] = get_nearest_setup(E, this_time, this_lat, this_lon, E->setup, E->wavesLat, E->wavesLon);
                                      //exit(1);
                                    */
-
-                                  E->setup_on_roms[t][i][j] = get_setup(E->Hs_on_roms[t][i][j], E->Tp_on_roms[t][i][j], E->slope[nearest_index[i][j]]);
+                                   // some cases for Hs and Tp are zero.
+                                   // don't call get_setup() for these because it will divide by zero
+                                  if( (E->Hs_on_roms[t][i][j] == 0.0) || (E->Tp_on_roms[t][i][j] == 0.0))
+                                    E->setup_on_roms[t][i][j] = 0.0;
+                                  else
+                                    E->setup_on_roms[t][i][j] = get_setup(E->Hs_on_roms[t][i][j], E->Tp_on_roms[t][i][j], E->slope[nearest_index[i][j]]);
 
               #ifdef CHECK
                                   // temporarily splat with Hs to check
