@@ -15,8 +15,6 @@ void process_tides(e *E){
         int i,j,t;
         int count;
 
-        static int beenHere = FALSE;
-
         // read in the tide file
         if((retval = nc_open(E->tide_input, NC_NOWRITE, &ncid)))
                 fail("failed to open tide input file: error is %d\n",retval);
@@ -309,8 +307,8 @@ void process_tides(e *E){
                 count = 0;
                 for(i=0; i<E->nLonRho; i++) {
                         for(j=0; j<E->nLatRho; j++) {
-                                //if(E->coastline_mask[i][j] == 0){
-                                if(E->mask_rho[i][j] == 0){
+                                if(E->coastline_mask[i][j] == 0){
+                                //if(E->mask_rho[i][j] == 0){
                                         E->tide_on_roms[t][i][j] = NC_FILL_DOUBLE;
                                 }
                                 else{

@@ -16,13 +16,8 @@ void process_auswave(e *E){
   double sec;
   int ierr, yr, mo, day, hr, min;
 
-  // nn variables
-  double *nn_interp;
-
   int i,j,t;
   int count;
-
-  static int beenHere = FALSE;
 
 
   // read in the auswave data so we can estimate wave setup
