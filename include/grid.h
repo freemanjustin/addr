@@ -11,6 +11,7 @@
 #include <time.h>
 #include <stdarg.h>
 #include <errno.h>
+#include <getopt.h>
 
 // netCDF header
 #include "netcdf.h"
@@ -101,14 +102,21 @@ typedef struct {
 
 typedef struct {
 
-	char    *input_xml;
+	char *input_xml;
 	char *roms_input;
 	char *tide_input;
 	char *wave_input;
+	char *levels_input;
 
 	char    *fname;
 	grid g;
 	bathymetry b;
+
+	int  haveRoms;
+ 	int  haveTides;
+  	int  haveWaves;
+  	int  haveLevels;
+  	int  haveOutput;
 
 	// output grid parameters
 	int one;
@@ -422,3 +430,6 @@ void time_interp_field(double *xpts, double *ypts, int npts_in, double *interp_x
 
 void add(e*);
 void write_time_series(e*);
+
+void get_cli_args(e *E, int argc, char *argv[]);
+void print_usage();

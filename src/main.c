@@ -8,7 +8,7 @@
 int main(int argc,char **argv)
 {
 	e	*E;
-    int     i,j,t;
+  int     i,j,t;
 	int count;
 
 
@@ -24,22 +24,26 @@ int main(int argc,char **argv)
 
 	// parse command line arguments
 	if(argc < 3){
-		printf("usage:\n");
-		printf("\taddr [roms history netcdf file] [tide netcdf file] [auswave netcdf file] [output filename]\n");
-		printf("\n\tauswave data must include Hs and Tp\n");
+		print_usage();
 		exit(1);
+		//printf("usage:\n");
+		//printf("\taddr [roms history netcdf file] [tide netcdf file] [auswave netcdf file] [output filename]\n");
+		//printf("\n\tauswave data must include Hs and Tp\n");
+		//exit(1);
 	}
 	else{
-		get_command_line_arg_as_string(&E->roms_input, argv[1]);
-		get_command_line_arg_as_string(&E->tide_input, argv[2]);
-		get_command_line_arg_as_string(&E->wave_input, argv[3]);
-		get_command_line_arg_as_string(&E->fname, argv[4]);
+		get_cli_args(E, argc, argv);
+		//get_command_line_arg_as_string(&E->roms_input, argv[1]);
+		//get_command_line_arg_as_string(&E->tide_input, argv[2]);
+		//get_command_line_arg_as_string(&E->wave_input, argv[3]);
+		//get_command_line_arg_as_string(&E->fname, argv[4]);
 	}
 
 	printf("roms file = %s\n", E->roms_input);
 	printf("tide file = %s\n", E->tide_input);
-	printf("wave setup file = %s\n", E->wave_input);
-	printf("outputfile = %s\n", E->fname);
+	printf("wave file = %s\n", E->wave_input);
+	printf("reference levels file = %s\n", E->wave_input);
+	printf("output file = %s\n", E->fname);
 	fflush(stdout);
 	// initialize the time converison libs
 	// Initialize the udunits-2 library
