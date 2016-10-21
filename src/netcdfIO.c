@@ -53,7 +53,7 @@ void defdims_netcdf(e *E){
 	E->one = 1;
 
 	// define the dimensions
-	if ((E->retval = nc_def_dim(E->ncid, "ocean_time", E->nTimeRoms, &E->ocean_time_dimid)))
+	if ((E->retval = nc_def_dim(E->ncid, "time", E->nTimeRoms, &E->ocean_time_dimid)))
 		fail("nc_def_dim failed!\n");
 
 	if ((E->retval = nc_def_dim(E->ncid, "xi_rho", E->nLatRho, &E->xi_rho_dimid)))
@@ -75,8 +75,8 @@ void defvars(e *E){
     // setup dimids
 
 
-	E->dimIdsTide[0] = E->ocean_time_dimid;
-	E->dimIdsTide[1] = E->eta_rho_dimid;
+		E->dimIdsTide[0] = E->ocean_time_dimid;
+		E->dimIdsTide[1] = E->eta_rho_dimid;
     E->dimIdsTide[2] = E->xi_rho_dimid;
 
     E->dimIdsRho[0] = E->eta_rho_dimid;
@@ -85,23 +85,34 @@ void defvars(e *E){
 
 	defvar_netcdf(E, E->ncid, "tide", NC_DOUBLE, 3, &E->dimIdsTide[0], &E->vid_tide);
     add_txt_attribute_netcdf(E, E->ncid, E->vid_h, "long_name", "tide at RHO-points");
-	add_txt_attribute_netcdf(E, E->ncid, E->vid_h, "units", "m");
+		add_txt_attribute_netcdf(E, E->ncid, E->vid_h, "units", "m");
 
 
-	defvar_netcdf(E, E->ncid, "lat_rho", NC_DOUBLE, 2, E->dimIdsRho, &E->vid_lat_rho);
-    add_txt_attribute_netcdf(E, E->ncid, E->vid_lat_rho, "long_name", "latitude at RHO-points");
-	add_txt_attribute_netcdf(E, E->ncid, E->vid_lat_rho, "units", "degree_north");
-    add_txt_attribute_netcdf(E, E->ncid, E->vid_lat_rho, "_CoordinateAxisType", "Lat");
 
-	defvar_netcdf(E, E->ncid, "lon_rho", NC_DOUBLE, 2, &E->dimIdsRho[0], &E->vid_lon_rho);
-    add_txt_attribute_netcdf(E, E->ncid, E->vid_lon_rho, "long_name", "longitude at RHO-points");
-	add_txt_attribute_netcdf(E, E->ncid, E->vid_lon_rho, "units", "degree_east");
-    add_txt_attribute_netcdf(E, E->ncid, E->vid_lon_rho, "_CoordinateAxisType", "Lon");
 
-	defvar_netcdf(E, E->ncid, "ocean_time", NC_DOUBLE, 1, &E->dimIdsTide[0], &E->vid_ocean_time);
+	defvar_netcdf(E, E->ncid, "lat", NC_DOUBLE, 2, E->dimIdsRho, &E->vid_lat_rho);
+    add_txt_attribute_netcdf(E, E->ncid, E->vid_lat_rho, "long_name", "latitude");
+		add_txt_attribute_netcdf(E, E->ncid, E->vid_lat_rho, "standard_name", "latitude");
+		add_txt_attribute_netcdf(E, E->ncid, E->vid_lat_rho, "units", "degrees north");
+    //add_txt_attribute_netcdf(E, E->ncid, E->vid_lat_rho, "_CoordinateAxisType", "Lat");
+		add_txt_attribute_netcdf(E, E->ncid, E->vid_lat_rho, "axis", "Y");
+
+	defvar_netcdf(E, E->ncid, "lon", NC_DOUBLE, 2, &E->dimIdsRho[0], &E->vid_lon_rho);
+    add_txt_attribute_netcdf(E, E->ncid, E->vid_lon_rho, "long_name", "longitude");
+		add_txt_attribute_netcdf(E, E->ncid, E->vid_lon_rho, "standard_name", "longitude");
+		add_txt_attribute_netcdf(E, E->ncid, E->vid_lon_rho, "units", "degrees east");
+    //add_txt_attribute_netcdf(E, E->ncid, E->vid_lon_rho, "_CoordinateAxisType", "Lon");
+		add_txt_attribute_netcdf(E, E->ncid, E->vid_lon_rho, "axis", "X");
+
+
+	defvar_netcdf(E, E->ncid, "time", NC_DOUBLE, 1, &E->dimIdsTide[0], &E->vid_ocean_time);
     add_txt_attribute_netcdf(E, E->ncid, E->vid_ocean_time, "long_name", "time");
-	add_txt_attribute_netcdf(E, E->ncid, E->vid_ocean_time, "units", "seconds since 1970-01-01 00:00:00");
+		add_txt_attribute_netcdf(E, E->ncid, E->vid_ocean_time, "units", "seconds since 1970-01-01 00:00:00");
     add_txt_attribute_netcdf(E, E->ncid, E->vid_ocean_time, "calendar", "gregorian");
+		add_txt_attribute_netcdf(E, E->ncid, E->vid_ocean_time, "_CoordinateAxisType", "time");
+		add_txt_attribute_netcdf(E, E->ncid, E->vid_ocean_time, "axis", "T");
+
+
 
 }
 
@@ -180,19 +191,19 @@ void write_coastal_data(e *E) {
 	int ocean_time_varid;
 
 	// set the compression parameters
-    int shuffle = 1;    
-    int deflate = 1; 
-    int deflate_level = 1;
+  int shuffle = 1;
+  int deflate = 1;
+  int deflate_level = 1;
 
 	// create the file
 	nc_create(E->fname, NC_NETCDF4|NC_CLOBBER, &ncid);
 	// def dimensions
-	nc_def_dim(ncid, "ocean_time", E->nTimeRoms, &time_dimid);
+	nc_def_dim(ncid, "time", E->nTimeRoms, &time_dimid);
 	//nc_def_dim(ncid, "wave_time", E->nTimeWaves, &time_waves_dimid);
 	//nc_def_dim(ncid,"wave_time", E->nTimeWavesSubset, &time_waves_dimid);
 	//nc_def_dim(ncid,"tide_time", E->nTimeTideSubset, &time_tides_dimid);
-	nc_def_dim(ncid, "xi_rho", E->nLatRho, &lat_dimid);
-	nc_def_dim(ncid, "eta_rho", E->nLonRho, &lon_dimid);
+	nc_def_dim(ncid, "lat", E->nLatRho, &lat_dimid);
+	nc_def_dim(ncid, "lon", E->nLonRho, &lon_dimid);
 	// def vars
 	dimIds[0] = lon_dimid;
 	dimIds[1] = lat_dimid;
@@ -218,12 +229,15 @@ void write_coastal_data(e *E) {
 	nc_put_att_text(ncid, wave_time_varid, "calendar", strlen("gregorian"), "gregorian");
 	*/
 
-	nc_def_var(ncid, "ocean_time", NC_DOUBLE, 1, &dimIds3d[0], &ocean_time_varid);
+	nc_def_var(ncid, "time", NC_DOUBLE, 1, &dimIds3d[0], &ocean_time_varid);
     // define the compression options for this variable
     nc_def_var_deflate(ncid, ocean_time_varid, shuffle, deflate, deflate_level);
-	nc_put_att_text(ncid, ocean_time_varid, "long_name", strlen("time"), "time");
-	nc_put_att_text(ncid, ocean_time_varid, "units", strlen(E->roms_time_units), E->roms_time_units);
-	nc_put_att_text(ncid, ocean_time_varid, "calendar", strlen("gregorian"), "gregorian");
+		nc_put_att_text(ncid, ocean_time_varid, "long_name", strlen("time"), "time");
+		nc_put_att_text(ncid, ocean_time_varid, "units", strlen(E->roms_time_units), E->roms_time_units);
+		nc_put_att_text(ncid, ocean_time_varid, "calendar", strlen("gregorian"), "gregorian");
+		nc_put_att_text(ncid, ocean_time_varid, "_CoordinateAxisType", strlen("time"), "time");
+		nc_put_att_text(ncid, ocean_time_varid, "axis", strlen("T"), "T");
+
 
 	/*
 	nc_def_var(ncid, "tide_time", NC_DOUBLE, 1, &dimIds3d_tides[0], &tide_time_varid);
@@ -232,32 +246,71 @@ void write_coastal_data(e *E) {
 	nc_put_att_text(ncid, ocean_time_varid, "calendar", strlen("gregorian"), "gregorian");
 	*/
 
-	nc_def_var(ncid, "lat_rho", NC_DOUBLE, 2, dimIds, &lat_varid);
+	nc_def_var(ncid, "lat", NC_DOUBLE, 2, dimIds, &lat_varid);
 	// define the compression options for this variable
-    nc_def_var_deflate(ncid, lat_varid, shuffle, deflate, deflate_level);
-	nc_put_att_text(ncid, lat_varid, "_CoordinateAxisType", strlen("Lat"), "Lat");
-	nc_def_var(ncid, "lon_rho", NC_DOUBLE, 2, dimIds, &lon_varid);
+  nc_def_var_deflate(ncid, lat_varid, shuffle, deflate, deflate_level);
+	nc_put_att_text(ncid, lat_varid, "long_name", strlen("latitude"), "latitude");
+	nc_put_att_text(ncid, lat_varid, "standard_name", strlen("latitude"), "latitude");
+	nc_put_att_text(ncid, lat_varid, "units", strlen("degrees north"), "degrees north");
+	nc_put_att_text(ncid, lat_varid, "axis", strlen("Y"), "Y");
+	//nc_put_att_text(ncid, lat_varid, "_CoordinateAxisType", strlen("Lat"), "Lat");
+
+
+	nc_def_var(ncid, "lon", NC_DOUBLE, 2, dimIds, &lon_varid);
 	// define the compression options for this variable
-    nc_def_var_deflate(ncid, lon_varid, shuffle, deflate, deflate_level);
-	nc_put_att_text(ncid, lon_varid, "_CoordinateAxisType", strlen("Lon"), "Lon");
+  nc_def_var_deflate(ncid, lon_varid, shuffle, deflate, deflate_level);
+	nc_put_att_text(ncid, lon_varid, "long_name", strlen("Lon"), "longitude");
+	nc_put_att_text(ncid, lon_varid, "standard_name", strlen("longitude"), "longitude");
+	nc_put_att_text(ncid, lon_varid, "units", strlen("degrees east"), "degrees east");
+	nc_put_att_text(ncid, lon_varid, "axis", strlen("X"), "X");
+	//nc_put_att_text(ncid, lon_varid, "_CoordinateAxisType", strlen("Lon"), "Lon");
+
+
+
 	nc_def_var(ncid, "coastline_mask", NC_DOUBLE, 2, dimIds, &coastline_varid);
 	// define the compression options for this variable
-    nc_def_var_deflate(ncid, coastline_varid, shuffle, deflate, deflate_level);
-	nc_put_att_text(ncid, coastline_varid, "coordinates", strlen("lat_rho lon_rho"), "lat_rho lon_rho");
-	nc_def_var(ncid, "zeta_coast", NC_DOUBLE, 3, dimIds3d, &zeta_coast_varid);
-	// define the compression options for this variable
-    nc_def_var_deflate(ncid, zeta_coast_varid, shuffle, deflate, deflate_level);
-	nc_put_att_text(ncid, zeta_coast_varid, "coordinates", strlen("lat_rho lon_rho"), "lat_rho lon_rho");
-	//nc_def_var(ncid, "setup", NC_DOUBLE, 3, dimIds3d_waves, &setup_coast_varid);
-	nc_def_var(ncid, "setup", NC_DOUBLE, 3, dimIds3d, &setup_coast_varid);
-	// define the compression options for this variable
-    nc_def_var_deflate(ncid, setup_coast_varid, shuffle, deflate, deflate_level);
-	nc_put_att_text(ncid, setup_coast_varid, "coordinates", strlen("lat_rho lon_rho"), "lat_rho lon_rho");
+  nc_def_var_deflate(ncid, coastline_varid, shuffle, deflate, deflate_level);
+	nc_put_att_text(ncid, coastline_varid, "long_name", strlen("land sea mask"), "land sea mask");
+	nc_put_att_text(ncid, coastline_varid, "flag_values", strlen("0, 1"), "0, 1");
+	nc_put_att_text(ncid, coastline_varid, "flag_meaning", strlen("land water"), "land water");
+	nc_put_att_text(ncid, coastline_varid, "coordinates", strlen("lat lon"), "lat lon");
 
-	nc_def_var(ncid, "total_sea_level", NC_DOUBLE, 3, dimIds3d, &added_coast_varid);
+
+
+	nc_def_var(ncid, "surge", NC_DOUBLE, 3, dimIds3d, &zeta_coast_varid);
 	// define the compression options for this variable
-    nc_def_var_deflate(ncid, added_coast_varid, shuffle, deflate, deflate_level);
-	nc_put_att_text(ncid, setup_coast_varid, "coordinates", strlen("lat_rho lon_rho"), "lat_rho lon_rho");
+  nc_def_var_deflate(ncid, zeta_coast_varid, shuffle, deflate, deflate_level);
+	nc_put_att_text(ncid, zeta_coast_varid, "long_name", strlen("sea level due to atmospheric wind and pressure"), "sea level due to atmospheric wind and pressure");
+	nc_put_att_text(ncid, zeta_coast_varid, "standard_name", strlen("sea_surface_height_above_sea_level"), "sea_surface_height_above_sea_level");
+	nc_put_att_text(ncid, zeta_coast_varid, "units", strlen("m"), "m");
+	nc_put_att_text(ncid, zeta_coast_varid, "positive", strlen("up"), "up");
+	nc_put_att_text(ncid, zeta_coast_varid, "coordinates", strlen("lat lon"), "lat lon");
+
+
+	//nc_def_var(ncid, "setup", NC_DOUBLE, 3, dimIds3d_waves, &setup_coast_varid);
+	nc_def_var(ncid, "wave_setup", NC_DOUBLE, 3, dimIds3d, &setup_coast_varid);
+	// define the compression options for this variable
+  nc_def_var_deflate(ncid, setup_coast_varid, shuffle, deflate, deflate_level);
+	nc_put_att_text(ncid, setup_coast_varid, "long_name", strlen("sea level due to wave setup"), "sea level due to wave setup");
+	nc_put_att_text(ncid, setup_coast_varid, "standard_name", strlen("sea_surface_height_above_sea_level"), "sea_surface_height_above_sea_level");
+	nc_put_att_text(ncid, setup_coast_varid, "units", strlen("m"), "m");
+	nc_put_att_text(ncid, setup_coast_varid, "positive", strlen("up"), "up");
+	nc_put_att_text(ncid, setup_coast_varid, "method", strlen("simple paramaterisation"), "simple paramaterisation");
+	nc_put_att_text(ncid, setup_coast_varid, "coordinates", strlen("lat lon"), "lat lon");
+
+
+
+	nc_def_var(ncid, "sea_level", NC_DOUBLE, 3, dimIds3d, &added_coast_varid);
+	// define the compression options for this variable
+  nc_def_var_deflate(ncid, added_coast_varid, shuffle, deflate, deflate_level);
+	nc_put_att_text(ncid, setup_coast_varid, "long_name", strlen("sea level"), "sea level");
+	nc_put_att_text(ncid, setup_coast_varid, "standard_name", strlen("sea_surface_height_above_sea_level"), "sea_surface_height_above_sea_level");
+	nc_put_att_text(ncid, setup_coast_varid, "units", strlen("m"), "m");
+	nc_put_att_text(ncid, setup_coast_varid, "positive", strlen("up"), "up");
+	nc_put_att_text(ncid, setup_coast_varid, "method", strlen("linear superposition"), "linear superposition");
+	nc_put_att_text(ncid, setup_coast_varid, "ancillary_variables", strlen("level_MSL"), "level_MSL");
+	nc_put_att_text(ncid, setup_coast_varid, "coordinates", strlen("lat lon"), "lat lon");
+
 
 	/*
 	nc_def_var(ncid, "Hs", NC_DOUBLE, 3, dimIds3d_waves, &Hs_coast_varid);
@@ -271,8 +324,13 @@ void write_coastal_data(e *E) {
 
 	nc_def_var(ncid, "tide", NC_DOUBLE, 3, dimIds3d, &tide_coast_varid);
 	// define the compression options for this variable
-    nc_def_var_deflate(ncid, tide_coast_varid, shuffle, deflate, deflate_level);
-	nc_put_att_text(ncid, tide_coast_varid, "coordinates", strlen("lat_rho lon_rho"), "lat_rho lon_rho");
+	nc_def_var_deflate(ncid, tide_coast_varid, shuffle, deflate, deflate_level);
+	nc_put_att_text(ncid, tide_coast_varid, "long_name", strlen("sea level due to harmonic tide"), "sea level due to harmonic tide");
+	nc_put_att_text(ncid, tide_coast_varid, "standard_name", strlen("sea_surface_height_above_sea_level"), "sea_surface_height_above_sea_level");
+	nc_put_att_text(ncid, tide_coast_varid, "units", strlen("m"), "m");
+	nc_put_att_text(ncid, tide_coast_varid, "positive", strlen("up"), "up");
+	nc_put_att_text(ncid, tide_coast_varid, "coordinates", strlen("lat lon"), "lat lon");
+
 
 	nc_enddef(ncid);
 	// write the data
