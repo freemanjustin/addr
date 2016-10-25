@@ -27,6 +27,9 @@
 
 #include "jutil.h"
 
+// kdtree
+#include "kdtree.h"
+
 // libnn includes
 #include "config.h"
 #include "nan.h"

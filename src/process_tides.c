@@ -84,6 +84,13 @@ void process_tides(e *E){
         // now just read in what we want from the files
         free(E->tideLat);
         free(E->tideLon);
+
+	// gap testing
+	lat_start = 0;
+	lat_end = E->nLatTide-1;
+	lon_start = 0;
+	lon_end = E->nLonTide-1;
+
         E->nLatTide = (lat_end - lat_start);
         E->nLonTide = (lon_end - lon_start);
         E->tideLat = malloc(E->nLatTide*sizeof(double));

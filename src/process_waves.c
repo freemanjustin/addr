@@ -103,6 +103,13 @@ void process_auswave(e *E){
   // for example, if the spatial extent does not overlap then throw an exception
 
   // now just read in what we want from the files
+
+  // reading in the whole dataset to avoid gaps in the interpolation
+  lat_start = 0;
+  lat_end = E->nLatWaves-1;
+  lon_start = 0;
+  lon_end = E->nLonWaves-1;
+
   free(E->wavesLat);
   free(E->wavesLon);
   E->nLatWaves = (lat_end - lat_start);
