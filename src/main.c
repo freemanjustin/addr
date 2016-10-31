@@ -42,7 +42,7 @@ int main(int argc,char **argv)
 	printf("roms file = %s\n", E->roms_input);
 	printf("tide file = %s\n", E->tide_input);
 	printf("wave file = %s\n", E->wave_input);
-	printf("reference levels file = %s\n", E->wave_input);
+	printf("reference levels file = %s\n", E->levels_input);
 	printf("output file = %s\n", E->fname);
 	fflush(stdout);
 	// initialize the time converison libs
@@ -81,6 +81,10 @@ int main(int argc,char **argv)
 	printf("done\n");fflush(stdout);
 	fflush(stdout);
 
+	printf("adding refernce levels...");fflush(stdout);
+	process_reference_levels(E);
+	printf("done\n");fflush(stdout);
+
 	// write the interpolated field to file
 	//write_netcdf(E);
 	printf("writing coastal data...");fflush(stdout);
@@ -92,6 +96,7 @@ int main(int argc,char **argv)
 	#ifdef CHECK
 	write_time_series(E);
 	#endif
+
 
 
 

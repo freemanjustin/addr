@@ -32,8 +32,10 @@ COBJ=	$(CSRC)main.o \
 	$(CSRC)process_roms.o \
 	$(CSRC)process_tides.o \
 	$(CSRC)process_waves.o \
+	$(CSRC)process_reference_levels.o \
 	$(CSRC)add.o \
-	$(CSRC)cli.o
+	$(CSRC)cli.o \
+	$(CSRC)kdtree.o
 	
 
 OBJ=	$(COBJ) 

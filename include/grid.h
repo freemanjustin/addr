@@ -103,6 +103,11 @@ typedef struct {
 	size_t nlon;
 }bathymetry;
 
+typedef struct{
+	int	i;
+	int	j;
+}grid_index;
+
 typedef struct {
 
 	char *input_xml;
@@ -182,6 +187,12 @@ typedef struct {
 	// end of lib_nn stuff
 
 
+	// kd tree
+	// kdtree stuff
+	grid_index	*roms_index;
+	void *kd;
+	struct kdres *set;
+
 	// addr stuff
 
 	// for roms
@@ -205,6 +216,25 @@ typedef struct {
 	size_t nLonWaves;
 	size_t nLatWaves;
 	size_t nTimeWavesSubset;
+
+	// for the reference levels
+	size_t	levelEtaRho;
+	size_t	levelXiRho;
+
+	double	**level_lon_rho;
+	double	**level_lat_rho;
+
+	double	**level_AHD;
+	double	**level_GDA94;
+	double	**level_HAT;
+	double	**level_LAT;
+	double	**level_MSL;
+
+	double	**level_AHD_onRoms;
+	double	**level_GDA94_onRoms;
+	double	**level_HAT_onRoms;
+	double	**level_LAT_onRoms;
+	double	**level_MSL_onRoms;
 
 
 
