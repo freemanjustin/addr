@@ -417,6 +417,7 @@ void add_txt_attribute_netcdf(e *E, int, int, char*, char* );
 
 void add_global_metadata( e*, int );
 void write_data( e* );
+void copy_atts(e *E, char *input_fname, int ncid_out, int varid_out, char *field_name);
 
 //void get_params( e* );
 //void _parseInputFile_params ( e*, xmlDocPtr, xmlNodePtr );

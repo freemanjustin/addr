@@ -7,6 +7,43 @@
 #include "grid.h"
 
 
+void copy_atts(e *E, char *input_fname, int ncid_out, int varid_out, char *field_name){
+	
+	char str[256];
+	int	natts;
+	int	i;
+
+	int retval, ncid;
+	int varid;
+	
+	// open the reference levels file
+	if((retval = nc_open(input_fname, NC_NOWRITE, &ncid)))
+    	fail("copy_atts: failed to open input file %s. error is %d\n", input_fname,retval);
+
+	if((retval = nc_inq_varid(ncid, field_name, &varid)))
+		fail(retval);
+
+	nc_inq_varnatts(ncid, varid, &natts);
+	//printf("variable %s has %d attributes\n", field_name, natts);
+
+	if((retval = nc_redef(ncid_out)))
+		fail(retval);
+
+
+	for(i=0;i<natts;i++){
+		nc_inq_attname(ncid, varid, i, str);
+		//printf("attribute %d: values is: %s\n", i, str); fflush(stdout);
+		if(strncmp(str,"_FillValue",10) != 0){
+			if((retval = nc_copy_att(ncid, varid, str, ncid_out, varid_out)))
+				fail(retval);
+		}
+	}
+	if((retval = nc_enddef(ncid_out)))
+		fail(retval);
+
+	nc_close(ncid);
+}
+
 
 void write_netcdf(e *E){
 
@@ -190,6 +227,8 @@ void write_coastal_data(e *E) {
 	int	Hs_coast_varid, Tp_coast_varid;
 	int ocean_time_varid;
 
+	int	level_AHD_varid, level_GDA94_varid, level_HAT_varid, level_LAT_varid, level_MSL_varid;
+
 	// set the compression parameters
   int shuffle = 1;
   int deflate = 1;
@@ -302,14 +341,14 @@ void write_coastal_data(e *E) {
 
 	nc_def_var(ncid, "sea_level", NC_DOUBLE, 3, dimIds3d, &added_coast_varid);
 	// define the compression options for this variable
-  nc_def_var_deflate(ncid, added_coast_varid, shuffle, deflate, deflate_level);
-	nc_put_att_text(ncid, setup_coast_varid, "long_name", strlen("sea level"), "sea level");
-	nc_put_att_text(ncid, setup_coast_varid, "standard_name", strlen("sea_surface_height_above_sea_level"), "sea_surface_height_above_sea_level");
-	nc_put_att_text(ncid, setup_coast_varid, "units", strlen("m"), "m");
-	nc_put_att_text(ncid, setup_coast_varid, "positive", strlen("up"), "up");
-	nc_put_att_text(ncid, setup_coast_varid, "method", strlen("linear superposition"), "linear superposition");
-	nc_put_att_text(ncid, setup_coast_varid, "ancillary_variables", strlen("level_MSL"), "level_MSL");
-	nc_put_att_text(ncid, setup_coast_varid, "coordinates", strlen("lat lon"), "lat lon");
+  	nc_def_var_deflate(ncid, added_coast_varid, shuffle, deflate, deflate_level);
+	nc_put_att_text(ncid, added_coast_varid, "long_name", strlen("sea level"), "sea level");
+	nc_put_att_text(ncid, added_coast_varid, "standard_name", strlen("sea_surface_height_above_sea_level"), "sea_surface_height_above_sea_level");
+	nc_put_att_text(ncid, added_coast_varid, "units", strlen("m"), "m");
+	nc_put_att_text(ncid, added_coast_varid, "positive", strlen("up"), "up");
+	nc_put_att_text(ncid, added_coast_varid, "method", strlen("linear superposition"), "linear superposition");
+	nc_put_att_text(ncid, added_coast_varid, "ancillary_variables", strlen("level_MSL"), "level_MSL");
+	nc_put_att_text(ncid, added_coast_varid, "coordinates", strlen("lat lon"), "lat lon");
 
 
 	/*
@@ -332,6 +371,96 @@ void write_coastal_data(e *E) {
 	nc_put_att_text(ncid, tide_coast_varid, "coordinates", strlen("lat lon"), "lat lon");
 
 
+
+	/*
+	float level_AHD(eta_rho, xi_rho) ;
+		level_AHD:_FillValue = -9999.f ;
+		level_AHD:long_name = "tidal reference level AHD" ;
+		level_AHD:standard_name = "water_surface_height_above_reference_datum" ;
+		level_AHD:units = "m" ;
+		level_AHD:ancillary_variables = "level_MSL" ;
+		level_AHD:method = "manual application of VDT tool to model gridpoints. http://www.crcsi.com.au/research/commissioned-research/auscoast-vdt/" ;
+	float level_GDA94(eta_rho, xi_rho) ;
+		level_GDA94:_FillValue = -9999.f ;
+		level_GDA94:long_name = "tidal reference level GDA94" ;
+		level_GDA94:standard_name = "water_surface_height_above_reference_datum" ;
+		level_GDA94:units = "m" ;
+		level_GDA94:ancillary_variables = "level_MSL" ;
+		level_GDA94:method = "manual application of VDT tool to model gridpoints. http://www.crcsi.com.au/research/commissioned-research/auscoast-vdt/" ;
+	float level_HAT(eta_rho, xi_rho) ;
+		level_HAT:_FillValue = -9999.f ;
+		level_HAT:long_name = "tidal reference level HAT" ;
+		level_HAT:standard_name = "water_surface_height_above_reference_datum" ;
+		level_HAT:units = "m" ;
+		level_HAT:ancillary_variables = "level_MSL" ;
+		level_HAT:method = "manual application of VDT tool to model gridpoints. http://www.crcsi.com.au/research/commissioned-research/auscoast-vdt/" ;
+	float level_LAT(eta_rho, xi_rho) ;
+		level_LAT:_FillValue = -9999.f ;
+		level_LAT:long_name = "tidal reference level LAT" ;
+		level_LAT:standard_name = "water_surface_height_above_reference_datum" ;
+		level_LAT:units = "m" ;
+		level_LAT:ancillary_variables = "level_MSL" ;
+		level_LAT:method = "manual application of VDT tool to model gridpoints. http://www.crcsi.com.au/research/commissioned-research/auscoast-vdt/" ;
+	float level_MSL(eta_rho, xi_rho) ;
+		level_MSL:_FillValue = -9999.f ;
+		level_MSL:long_name = "tidal reference level MSL" ;
+		level_MSL:standard_name = "water_surface_height_above_reference_datum" ;
+		level_MSL:units = "m" ;
+		level_MSL:ancillary_variables = "level_MSL" ;
+		level_MSL:method = "manual application of VDT tool to model gridpoints. http://www.crcsi.com.au/research/commissioned-research/auscoast-vdt/" ;
+
+		*/
+
+
+	nc_def_var(ncid, "level_AHD", NC_DOUBLE, 2, dimIds, &level_AHD_varid);
+	// define the compression options for this variable
+	nc_def_var_deflate(ncid, level_AHD_varid, shuffle, deflate, deflate_level);
+	//nc_put_att_text(ncid, level_AHD_varid, "long_name", strlen("sea level due to harmonic tide"), "sea level due to harmonic tide");
+	//nc_put_att_text(ncid, level_AHD_varid, "standard_name", strlen("sea_surface_height_above_sea_level"), "sea_surface_height_above_sea_level");
+	//nc_put_att_text(ncid, level_AHD_varid, "units", strlen("m"), "m");
+	//nc_put_att_text(ncid, level_AHD_varid, "positive", strlen("up"), "up");
+	//nc_put_att_text(ncid, level_AHD_varid, "coordinates", strlen("lat lon"), "lat lon");
+
+	nc_def_var(ncid, "level_GDA94", NC_DOUBLE, 2, dimIds, &level_GDA94_varid);
+	// define the compression options for this variable
+	nc_def_var_deflate(ncid, level_GDA94_varid, shuffle, deflate, deflate_level);
+	//nc_put_att_text(ncid, level_AHD_varid, "long_name", strlen("sea level due to harmonic tide"), "sea level due to harmonic tide");
+	//nc_put_att_text(ncid, level_AHD_varid, "standard_name", strlen("sea_surface_height_above_sea_level"), "sea_surface_height_above_sea_level");
+	//nc_put_att_text(ncid, level_AHD_varid, "units", strlen("m"), "m");
+	//nc_put_att_text(ncid, level_AHD_varid, "positive", strlen("up"), "up");
+	//nc_put_att_text(ncid, level_AHD_varid, "coordinates", strlen("lat lon"), "lat lon");
+
+	nc_def_var(ncid, "level_HAT", NC_DOUBLE, 2, dimIds, &level_HAT_varid);
+	// define the compression options for this variable
+	nc_def_var_deflate(ncid, level_HAT_varid, shuffle, deflate, deflate_level);
+	//nc_put_att_text(ncid, level_AHD_varid, "long_name", strlen("sea level due to harmonic tide"), "sea level due to harmonic tide");
+	//nc_put_att_text(ncid, level_AHD_varid, "standard_name", strlen("sea_surface_height_above_sea_level"), "sea_surface_height_above_sea_level");
+	//nc_put_att_text(ncid, level_AHD_varid, "units", strlen("m"), "m");
+	//nc_put_att_text(ncid, level_AHD_varid, "positive", strlen("up"), "up");
+	//nc_put_att_text(ncid, level_AHD_varid, "coordinates", strlen("lat lon"), "lat lon");
+
+	nc_def_var(ncid, "level_LAT", NC_DOUBLE, 2, dimIds, &level_LAT_varid);
+	// define the compression options for this variable
+	nc_def_var_deflate(ncid, level_LAT_varid, shuffle, deflate, deflate_level);
+	//nc_put_att_text(ncid, level_AHD_varid, "long_name", strlen("sea level due to harmonic tide"), "sea level due to harmonic tide");
+	//nc_put_att_text(ncid, level_AHD_varid, "standard_name", strlen("sea_surface_height_above_sea_level"), "sea_surface_height_above_sea_level");
+	//nc_put_att_text(ncid, level_AHD_varid, "units", strlen("m"), "m");
+	//nc_put_att_text(ncid, level_AHD_varid, "positive", strlen("up"), "up");
+	//nc_put_att_text(ncid, level_AHD_varid, "coordinates", strlen("lat lon"), "lat lon");
+
+	nc_def_var(ncid, "level_MSL", NC_DOUBLE, 2, dimIds, &level_MSL_varid);
+	// define the compression options for this variable
+	nc_def_var_deflate(ncid, level_MSL_varid, shuffle, deflate, deflate_level);
+	//nc_put_att_text(ncid, level_AHD_varid, "long_name", strlen("sea level due to harmonic tide"), "sea level due to harmonic tide");
+	//nc_put_att_text(ncid, level_AHD_varid, "standard_name", strlen("sea_surface_height_above_sea_level"), "sea_surface_height_above_sea_level");
+	//nc_put_att_text(ncid, level_AHD_varid, "units", strlen("m"), "m");
+	//nc_put_att_text(ncid, level_AHD_varid, "positive", strlen("up"), "up");
+	//nc_put_att_text(ncid, level_AHD_varid, "coordinates", strlen("lat lon"), "lat lon");
+
+
+
+
+
 	nc_enddef(ncid);
 	// write the data
 
@@ -341,6 +470,15 @@ void write_coastal_data(e *E) {
 	nc_put_var_double(ncid, lat_varid, &E->lat_rho[0][0]);
 	nc_put_var_double(ncid, lon_varid, &E->lon_rho[0][0]);
 	nc_put_var_double(ncid, coastline_varid, &E->coastline_mask[0][0]);
+
+	// reference levels
+	
+	nc_put_var_double(ncid, level_AHD_varid, &E->level_AHD_onRoms[0][0]);
+	nc_put_var_double(ncid, level_GDA94_varid, &E->level_GDA94_onRoms[0][0]);
+	nc_put_var_double(ncid, level_HAT_varid, &E->level_HAT_onRoms[0][0]);
+	nc_put_var_double(ncid, level_LAT_varid, &E->level_LAT_onRoms[0][0]);
+	nc_put_var_double(ncid, level_MSL_varid, &E->level_MSL_onRoms[0][0]);
+
 	nc_put_var_double(ncid, zeta_coast_varid, &E->zeta_coast[0][0][0]);
 	//nc_put_var_double(ncid, setup_coast_varid, &E->setup_on_roms[0][0][0]);
 	nc_put_var_double(ncid, setup_coast_varid, &E->setup_on_roms_time_interp[0][0][0]);
@@ -350,6 +488,13 @@ void write_coastal_data(e *E) {
 	nc_put_var_double(ncid, tide_coast_varid, &E->tide_on_roms_time_interp[0][0][0]);
 
 	nc_put_var_double(ncid, added_coast_varid, &E->added[0][0][0]);
+
+	// copy the attribute data from the reference levels file
+	copy_atts(E, E->levels_input, ncid, level_AHD_varid, "level_AHD" );
+	copy_atts(E, E->levels_input, ncid, level_GDA94_varid, "level_GDA94" );
+	copy_atts(E, E->levels_input, ncid, level_HAT_varid, "level_HAT" );
+	copy_atts(E, E->levels_input, ncid, level_LAT_varid, "level_LAT" );
+	copy_atts(E, E->levels_input, ncid, level_MSL_varid, "level_MSL" );
 
 	// close the file
 	nc_close(ncid);

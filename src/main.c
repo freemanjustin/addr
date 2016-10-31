@@ -81,7 +81,7 @@ int main(int argc,char **argv)
 	printf("done\n");fflush(stdout);
 	fflush(stdout);
 
-	printf("adding refernce levels...");fflush(stdout);
+	printf("adding reference levels...");fflush(stdout);
 	process_reference_levels(E);
 	printf("done\n");fflush(stdout);
 

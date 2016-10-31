@@ -24,7 +24,7 @@ void process_reference_levels(e *E){
   if((retval = nc_inq_dimlen(ncid,varid,&E->levelXiRho)))
     fail("failed to get reference levels lat dimid: error is %d\n",retval);
 
-  printf("levels xi_rho = %zu\n", E->levelXiRho);
+  //printf("levels xi_rho = %zu\n", E->levelXiRho);
 
   // get the lon dimension sizes
   if((retval = nc_inq_dimid(ncid, "eta_rho", &varid)))
@@ -33,7 +33,7 @@ void process_reference_levels(e *E){
   if((retval = nc_inq_dimlen(ncid,varid,&E->levelEtaRho)))
     fail("failed to read roms lon_rho data: error is %d\n",retval);
 
-  printf("levels eta_rho = %zu\n", E->levelEtaRho);
+  //printf("levels eta_rho = %zu\n", E->levelEtaRho);
 
   // malloc room for the arrays
 
@@ -154,7 +154,7 @@ void process_reference_levels(e *E){
       if(E->coastline_mask[i][j] == 1) { // if this point is a coastal point
   		 	pos[0] = E->lon_rho[i][j];
   			pos[1] = E->lat_rho[i][j];
-  			E->set = kd_nearest_range(E->kd, pos, 0.01);	// make the .05 dynamic
+  			E->set = kd_nearest_range(E->kd, pos, 0.02);	// make the .05 dynamic
   			//printf("##point %d ## search around grid point %f, %f returned %d grid items\n", count,pos[0], pos[1], kd_res_size(E->set));
         if(kd_res_size(E->set) == 0) printf("########### missed point!! increase search range ############\n");
         while( !kd_res_end( E->set ) ) {
@@ -166,6 +166,7 @@ void process_reference_levels(e *E){
 
   		    // print out the retrieved data
   		    //printf( "\tpos at (%.3f, %.3f) idx = %d %d\n", pos[0], pos[1], idx->i, idx->j );
+          //printf( "\t\tdata at (%.3f, %.3f) [idx = %d %d] = %f\n", pos[0], pos[1], idx->i, idx->j, E->level_AHD[idx->i][idx->j] );
 
           // this is where we construct the output data for writing
           // by copying the reference level data to the
