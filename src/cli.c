@@ -97,10 +97,12 @@ void get_cli_args(e *E, int argc, char *argv[]){
     fprintf(stderr,"no wave input file specified:\nI need one of these to run.\n");
     exit(1);
   }
+  /*
   if(  E->haveTides == FALSE ){
     fprintf(stderr,"no tides input file specified:\nI need one of these to run.\n");
     exit(1);
   }
+  */
   //if(  E->haveLevels == FALSE ){
   //  fprintf(stderr,"no reference level input file specified:\nI need one of these to run.\n");
   //  exit(1);
