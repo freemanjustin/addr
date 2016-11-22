@@ -326,6 +326,7 @@ void write_coastal_data(e *E) {
 	nc_put_att_text(ncid, zeta_coast_varid, "coordinates", strlen("lat lon"), "lat lon");
 
 
+/*
 	//nc_def_var(ncid, "setup", NC_DOUBLE, 3, dimIds3d_waves, &setup_coast_varid);
 	nc_def_var(ncid, "wave_setup", NC_DOUBLE, 3, dimIds3d, &setup_coast_varid);
 	// define the compression options for this variable
@@ -336,7 +337,7 @@ void write_coastal_data(e *E) {
 	nc_put_att_text(ncid, setup_coast_varid, "positive", strlen("up"), "up");
 	nc_put_att_text(ncid, setup_coast_varid, "method", strlen("simple paramaterisation"), "simple paramaterisation");
 	nc_put_att_text(ncid, setup_coast_varid, "coordinates", strlen("lat lon"), "lat lon");
-
+*/
 
 
 	nc_def_var(ncid, "sea_level", NC_DOUBLE, 3, dimIds3d, &added_coast_varid);
@@ -411,7 +412,7 @@ void write_coastal_data(e *E) {
 
 		*/
 
-
+/*
 	nc_def_var(ncid, "level_AHD", NC_DOUBLE, 2, dimIds, &level_AHD_varid);
 	// define the compression options for this variable
 	nc_def_var_deflate(ncid, level_AHD_varid, shuffle, deflate, deflate_level);
@@ -456,7 +457,7 @@ void write_coastal_data(e *E) {
 	//nc_put_att_text(ncid, level_AHD_varid, "units", strlen("m"), "m");
 	//nc_put_att_text(ncid, level_AHD_varid, "positive", strlen("up"), "up");
 	//nc_put_att_text(ncid, level_AHD_varid, "coordinates", strlen("lat lon"), "lat lon");
-
+*/
 
 
 
@@ -472,16 +473,17 @@ void write_coastal_data(e *E) {
 	nc_put_var_double(ncid, coastline_varid, &E->coastline_mask[0][0]);
 
 	// reference levels
-	
+	/*
 	nc_put_var_double(ncid, level_AHD_varid, &E->level_AHD_onRoms[0][0]);
 	nc_put_var_double(ncid, level_GDA94_varid, &E->level_GDA94_onRoms[0][0]);
 	nc_put_var_double(ncid, level_HAT_varid, &E->level_HAT_onRoms[0][0]);
 	nc_put_var_double(ncid, level_LAT_varid, &E->level_LAT_onRoms[0][0]);
 	nc_put_var_double(ncid, level_MSL_varid, &E->level_MSL_onRoms[0][0]);
+	*/
 
 	nc_put_var_double(ncid, zeta_coast_varid, &E->zeta_coast[0][0][0]);
 	//nc_put_var_double(ncid, setup_coast_varid, &E->setup_on_roms[0][0][0]);
-	nc_put_var_double(ncid, setup_coast_varid, &E->setup_on_roms_time_interp[0][0][0]);
+	//nc_put_var_double(ncid, setup_coast_varid, &E->setup_on_roms_time_interp[0][0][0]);
 	//nc_put_var_double(ncid, Hs_coast_varid, &E->Hs_on_roms[0][0][0]);
 	//nc_put_var_double(ncid, Tp_coast_varid, &E->Tp_on_roms[0][0][0]);
 
@@ -489,12 +491,14 @@ void write_coastal_data(e *E) {
 
 	nc_put_var_double(ncid, added_coast_varid, &E->added[0][0][0]);
 
+/*
 	// copy the attribute data from the reference levels file
 	copy_atts(E, E->levels_input, ncid, level_AHD_varid, "level_AHD" );
 	copy_atts(E, E->levels_input, ncid, level_GDA94_varid, "level_GDA94" );
 	copy_atts(E, E->levels_input, ncid, level_HAT_varid, "level_HAT" );
 	copy_atts(E, E->levels_input, ncid, level_LAT_varid, "level_LAT" );
 	copy_atts(E, E->levels_input, ncid, level_MSL_varid, "level_MSL" );
+*/
 
 	// close the file
 	nc_close(ncid);

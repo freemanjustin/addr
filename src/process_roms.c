@@ -234,4 +234,6 @@ void process_roms(e *E){
 		}
 	}
 
+	free(E->zeta);
+
 }
