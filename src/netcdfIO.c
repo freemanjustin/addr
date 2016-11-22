@@ -326,7 +326,7 @@ void write_coastal_data(e *E) {
 	nc_put_att_text(ncid, zeta_coast_varid, "coordinates", strlen("lat lon"), "lat lon");
 
 
-/*
+
 	//nc_def_var(ncid, "setup", NC_DOUBLE, 3, dimIds3d_waves, &setup_coast_varid);
 	nc_def_var(ncid, "wave_setup", NC_DOUBLE, 3, dimIds3d, &setup_coast_varid);
 	// define the compression options for this variable
@@ -337,7 +337,7 @@ void write_coastal_data(e *E) {
 	nc_put_att_text(ncid, setup_coast_varid, "positive", strlen("up"), "up");
 	nc_put_att_text(ncid, setup_coast_varid, "method", strlen("simple paramaterisation"), "simple paramaterisation");
 	nc_put_att_text(ncid, setup_coast_varid, "coordinates", strlen("lat lon"), "lat lon");
-*/
+
 
 
 	nc_def_var(ncid, "sea_level", NC_DOUBLE, 3, dimIds3d, &added_coast_varid);
@@ -361,7 +361,7 @@ void write_coastal_data(e *E) {
 
 	*/
 
-
+	/*
 	nc_def_var(ncid, "tide", NC_DOUBLE, 3, dimIds3d, &tide_coast_varid);
 	// define the compression options for this variable
 	nc_def_var_deflate(ncid, tide_coast_varid, shuffle, deflate, deflate_level);
@@ -370,7 +370,7 @@ void write_coastal_data(e *E) {
 	nc_put_att_text(ncid, tide_coast_varid, "units", strlen("m"), "m");
 	nc_put_att_text(ncid, tide_coast_varid, "positive", strlen("up"), "up");
 	nc_put_att_text(ncid, tide_coast_varid, "coordinates", strlen("lat lon"), "lat lon");
-
+	*/
 
 
 	/*
@@ -483,11 +483,11 @@ void write_coastal_data(e *E) {
 
 	nc_put_var_double(ncid, zeta_coast_varid, &E->zeta_coast[0][0][0]);
 	//nc_put_var_double(ncid, setup_coast_varid, &E->setup_on_roms[0][0][0]);
-	//nc_put_var_double(ncid, setup_coast_varid, &E->setup_on_roms_time_interp[0][0][0]);
+	nc_put_var_double(ncid, setup_coast_varid, &E->setup_on_roms_time_interp[0][0][0]);
 	//nc_put_var_double(ncid, Hs_coast_varid, &E->Hs_on_roms[0][0][0]);
 	//nc_put_var_double(ncid, Tp_coast_varid, &E->Tp_on_roms[0][0][0]);
 
-	nc_put_var_double(ncid, tide_coast_varid, &E->tide_on_roms_time_interp[0][0][0]);
+	//nc_put_var_double(ncid, tide_coast_varid, &E->tide_on_roms_time_interp[0][0][0]);
 
 	nc_put_var_double(ncid, added_coast_varid, &E->added[0][0][0]);
 

@@ -63,19 +63,18 @@ int main(int argc,char **argv)
 	fflush(stdout);
 
 	// get setup on roms grid
-	/*
 	printf("processing AUSWAVE grid information...");fflush(stdout);
 	process_auswave(E);
 	printf("done\n");fflush(stdout);
 	fflush(stdout);
-	*/
 
 	// get tide on roms grid
+	/*
 	printf("processing tide grid information...");fflush(stdout);
 	process_tides(E);
     printf("done\n");fflush(stdout);
 	fflush(stdout);
-
+	*/
 
 	// add the components
 	printf("adding...");fflush(stdout);
@@ -88,7 +87,7 @@ int main(int argc,char **argv)
 	process_reference_levels(E);
 	printf("done\n");fflush(stdout);
 	*/
-	
+
 	// write the interpolated field to file
 	//write_netcdf(E);
 	printf("writing coastal data...");fflush(stdout);
