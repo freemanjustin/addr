@@ -1,2 +1,7 @@
-./addr roms_file tide_file auswave_file output_file
-
+Usage:
+  -h, --help                print this help and exit
+  -r, --roms [filename]            roms input netcdf file
+  -t, --tides [filename]           tides input netcdf file
+  -w, --waves [filename]           waves input netcdf file
+  -l, --levels [filename]          reference levels input netcdf file
+  -o, --output [filename]          output netcdf file
