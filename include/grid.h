@@ -115,6 +115,7 @@ typedef struct {
 	char *tide_input;
 	char *wave_input;
 	char *levels_input;
+	char *grid_input;
 
 	char    *fname;
 	grid g;
@@ -125,6 +126,7 @@ typedef struct {
   	int  haveWaves;
   	int  haveLevels;
   	int  haveOutput;
+	int  haveGrid;
 
 	// output grid parameters
 	int one;
@@ -263,6 +265,11 @@ typedef struct {
 	double ***Hs_on_roms;
 	double ***Tp_on_roms;
 	double **coastline_mask;
+	double **bathymetry;
+	double **db_dx;
+	double **db_dy;
+	double **bathymetry_gradient;
+	double **bathymetry_slope;
 	double ***zeta_coast;
 	double ***setup_on_roms;
 	double ***setup_on_roms_time_interp;
@@ -464,6 +471,7 @@ void time_interp_field(double *xpts, double *ypts, int npts_in, double *interp_x
 
 void add(e*);
 void write_time_series(e*);
+void write_json(e*);
 
 void get_cli_args(e *E, int argc, char *argv[]);
 void print_usage();

@@ -3,11 +3,12 @@
 void get_cli_args(e *E, int argc, char *argv[]){
 
   int             c;
-  const char    * short_opt = "r:t:w:o:l:h";
+  const char    * short_opt = "r:t:w:o:l:g:h";
   struct option   long_opt[] =
   {
      {"help",          no_argument,       NULL, 'h'},
      {"roms",          required_argument, NULL, 'r'},
+     {"grid",          required_argument, NULL, 'g'},
      {"tides",          required_argument, NULL, 't'},
      {"waves",          required_argument, NULL, 'w'},
      {"output",          required_argument, NULL, 'o'},
@@ -16,10 +17,11 @@ void get_cli_args(e *E, int argc, char *argv[]){
   };
 
   E->haveRoms = 0;
- 	E->haveTides = 0;
+  E->haveTides = 0;
   E->haveWaves = 0;
   E->haveLevels = 0;
   E->haveOutput = 0;
+  E->haveGrid = 0;
 
   while((c = getopt_long(argc, argv, short_opt, long_opt, NULL)) != -1)
   {
@@ -46,6 +48,16 @@ void get_cli_args(e *E, int argc, char *argv[]){
           printf("tides_file = %s\n", E->tide_input);
           E->haveTides = 1;
           break;
+
+        case 'g':
+          E->grid_input = malloc((strlen(optarg)+1)*sizeof(char));
+          strncpy(E->grid_input, optarg, strlen(optarg));
+          // fix the string
+          E->grid_input[strlen(optarg)] = '\x0';
+          printf("grid_file = %s\n", E->grid_input);
+          E->haveGrid = 1;
+          break;
+
 
         case 'w':
           E->wave_input = malloc((strlen(optarg)+1)*sizeof(char));
@@ -97,10 +109,12 @@ void get_cli_args(e *E, int argc, char *argv[]){
     fprintf(stderr,"no wave input file specified:\nI need one of these to run.\n");
     exit(1);
   }
+  /*
   if(  E->haveTides == FALSE ){
     fprintf(stderr,"no tides input file specified:\nI need one of these to run.\n");
     exit(1);
   }
+  */
   //if(  E->haveLevels == FALSE ){
   //  fprintf(stderr,"no reference level input file specified:\nI need one of these to run.\n");
   //  exit(1);
@@ -112,6 +126,7 @@ void print_usage(){
   printf("Usage: \n");
   printf("  -h, --help                print this help and exit\n");
   printf("  -r, --roms [filename]            roms input netcdf file\n");
+  printf("  -g, --grid [filename]            roms grid netcdf file\n");
   printf("  -t, --tides [filename]           tides input netcdf file\n");
   printf("  -w, --waves [filename]           waves input netcdf file\n");
   printf("  -l, --levels [filename]          reference levels input netcdf file\n");

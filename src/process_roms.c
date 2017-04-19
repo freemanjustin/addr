@@ -18,6 +18,7 @@ void process_roms(e *E){
 	int count;
 
     double **padded_mask;
+    double **cangle;
 
     // read the target grid - this is the roms output curvilinear grid
 	// in this code we are interpolating the tide data onto the rho points
@@ -73,7 +74,13 @@ void process_roms(e *E){
 	E->lon_rho = malloc2d_double(E->nLonRho, E->nLatRho);
 	E->mask_rho = malloc2d_double(E->nLonRho, E->nLatRho);
 	E->zeta = malloc3d_double(E->nTimeRoms, E->nLonRho, E->nLatRho);
-
+	E->bathymetry = malloc2d_double(E->nLonRho, E->nLatRho);
+	E->db_dx = malloc2d_double(E->nLonRho, E->nLatRho);
+	E->db_dy = malloc2d_double(E->nLonRho, E->nLatRho);
+	E->bathymetry_gradient = malloc2d_double(E->nLonRho, E->nLatRho);
+	E->pm = malloc2d_double(E->nLonRho, E->nLatRho);
+	E->pn = malloc2d_double(E->nLonRho, E->nLatRho);
+	E->bathymetry_slope = malloc2d_double(E->nLonRho, E->nLatRho);
 
     // read the data from the ROMS output file
 	nc_inq_varid(ncid, "ocean_time", &varid);
@@ -111,9 +118,6 @@ void process_roms(e *E){
 
 
 
-
-
-
     nc_inq_varid(ncid, "lat_rho", &varid);
     if((retval = nc_get_var_double(ncid, varid, &E->lat_rho[0][0])))
 		fail("failed to read roms lat_rho data: error is %d\n", retval);
@@ -131,6 +135,25 @@ void process_roms(e *E){
     if((retval = nc_get_var_double(ncid, varid, &E->mask_rho[0][0])))
 		fail("failed to read roms mask_rho data: error is %d\n", retval);
 
+
+	/*
+	// get the bathymetry
+	nc_inq_varid(ncid, "h", &varid);
+    if((retval = nc_get_var_double(ncid, varid, &E->bathymetry[0][0])))
+                fail("failed to read roms bathymetry data: error is %d\n", retval);
+
+
+	// get pm
+	nc_inq_varid(ncid, "pm", &varid);
+    if((retval = nc_get_var_double(ncid, varid, &E->pm[0][0])))
+                fail("failed to read roms pm data: error is %d\n", retval);
+
+	// get pn
+	nc_inq_varid(ncid, "pn", &varid);
+    if((retval = nc_get_var_double(ncid, varid, &E->pn[0][0])))
+                fail("failed to read roms pn data: error is %d\n", retval);
+	*/
+
 	// get the sea_surface_height
 	nc_inq_varid(ncid, "zeta", &varid);
     if((retval = nc_get_var_double(ncid, varid, &E->zeta[0][0][0])))
@@ -140,6 +163,9 @@ void process_roms(e *E){
 	// will probably open the roms file as read-write so we can dump
 	// the interpolated tides onto it
 	nc_close(ncid);
+
+
+
 
 
     // find min and max longitude and latitudes for the roms data
@@ -221,6 +247,163 @@ void process_roms(e *E){
 
 	free(padded_mask);
 
+
+   // open the ROMS grid file to read in the bathymetry
+   // we need the bathymetry from this file so we can
+   // calculate the gradient for wave setup
+
+   if((retval = nc_open(E->grid_input, NC_NOWRITE, &ncid)))
+        fail("failed to open roms grid file: error is %d\n",retval);
+
+  // get the bathymetry
+        nc_inq_varid(ncid, "bathymetry", &varid);
+    if((retval = nc_get_var_double(ncid, varid, &E->bathymetry[0][0])))
+                fail("failed to read roms bathymetry data: error is %d\n", retval);
+
+
+        // get pm
+        nc_inq_varid(ncid, "pm", &varid);
+    if((retval = nc_get_var_double(ncid, varid, &E->pm[0][0])))
+                fail("failed to read roms pm data: error is %d\n", retval);
+
+        // get pn
+        nc_inq_varid(ncid, "pn", &varid);
+    if((retval = nc_get_var_double(ncid, varid, &E->pn[0][0])))
+                fail("failed to read roms pn data: error is %d\n", retval); 
+
+
+	nc_close(ncid);
+
+
+	// process bathymetry data to make land cells zero
+	// so we can calculate the gradient later
+/*	
+	// first find out what the 'depth' is for land masked points
+	double min_depth = 5.0;
+	for(i=0;i<E->nLonRho;i++){
+                for(j=0;j<E->nLatRho;j++){
+                        if(E->mask_rho[i][j] == 0.0){//assuming a min depth of 5 m
+                                min_depth = E->bathymetry[i][j];
+				break;
+                        }
+                }
+        }
+*/
+
+	/*
+	for(i=0;i<E->nLonRho;i++){
+                for(j=0;j<E->nLatRho;j++){	
+			if(E->bathymetry[i][j] < 0.0){//assuming a min depth of 5 m
+				E->bathymetry[i][j] = 0.0;
+			}
+		}
+	}
+	//printf("bathy min depth = %f\n", min_depth);
+	*/
+	// now calculate bathymetry gradient
+	// cal db/dx and db/dy using finite differences
+	// the slope is then tan-1(magnutide(gradient))
+	// slope angle = tan-1( sqrt(pow(db/dx,2)+pow(db/dy,2)) )
+	//
+	// backward difference for interior points
+
+	// dh/dx 
+	for(i=1;i<E->nLonRho;i++){
+                for(j=0;j<E->nLatRho;j++){
+			E->db_dx[i][j] = (E->bathymetry[i][j] - E->bathymetry[i-1][j])*E->pm[i][j];
+		}
+	}
+	// get edge value using backward difference
+	for(j=0;j<E->nLatRho;j++)
+		E->db_dx[0][j] = (E->bathymetry[1][j] - E->bathymetry[0][j]) * E->pm[0][j];
+
+
+	// dh/dy - backward difference
+	for(i=0;i<E->nLonRho;i++){
+                for(j=1;j<E->nLatRho;j++){
+                        E->db_dy[i][j] = (E->bathymetry[i][j] - E->bathymetry[i][j-1])*E->pn[i][j];
+                }
+        }
+	// get edge value using single sided difference
+	for(i=0;i<E->nLonRho;i++)
+		E->db_dy[i][0] = (E->bathymetry[i][1]-E->bathymetry[i][0])*E->pn[i][0];	
+
+
+	for(i=0;i<E->nLonRho;i++){
+                for(j=0;j<E->nLatRho;j++){
+			E->bathymetry_gradient[i][j] = sqrt(pow(E->db_dx[i][j],2.0)+pow(E->db_dy[i][j],2.0));
+			E->bathymetry_slope[i][j] = atan(E->bathymetry_gradient[i][j]);
+
+                }
+        }
+
+
+  for(i=0;i<E->nLonRho;i++){
+     for(j=0;j<E->nLatRho;j++){
+        if(E->bathymetry_slope[i][j] < 0.001) 
+              E->bathymetry_slope[i][j] = 0.001;
+     }
+  }
+
+
+    // write gradient data to file
+    // create the file
+    int lon_varid, lat_varid;
+    int lat_dimid, lon_dimid;
+    int dimIds[2];
+    int grad_varid, slope_varid, cangle_varid, dbdx_varid, dbdy_varid, h_varid;
+
+    cangle = malloc2d_double(E->nLonRho, E->nLatRho);
+    for(i=0;i<E->nLonRho;i++){
+         for(j=0;j<E->nLatRho;j++){    
+           if(E->coastline_mask[i][j] == 1)
+		cangle[i][j] = E->bathymetry_slope[i][j];
+           else
+                cangle[i][j] = NC_FILL_DOUBLE;
+
+
+	  if(E->mask_rho[i][j] == 0){
+		E->bathymetry_gradient[i][j] = NC_FILL_DOUBLE;
+		E->bathymetry_slope[i][j] = NC_FILL_DOUBLE; 
+		E->bathymetry[i][j] = NC_FILL_DOUBLE;
+		E->db_dx[i][j] = NC_FILL_DOUBLE;
+		E->db_dy[i][j] = NC_FILL_DOUBLE;
+	  }
+
+         }
+    }
+
+    nc_create("bathy_gradient.nc", NC_CLOBBER, &ncid);
+    // def dimensions
+    nc_def_dim(ncid, "lat", E->nLatRho, &lat_dimid);
+    nc_def_dim(ncid, "lon", E->nLonRho, &lon_dimid);
+    // def vars
+    dimIds[0] = lon_dimid;
+    dimIds[1] = lat_dimid;
+    nc_def_var(ncid, "lat", NC_DOUBLE, 2, dimIds, &lat_varid);
+    nc_def_var(ncid, "lon", NC_DOUBLE, 2, dimIds, &lon_varid);
+    nc_def_var(ncid, "gradient", NC_DOUBLE, 2, dimIds, &grad_varid);
+    nc_def_var(ncid, "angle", NC_DOUBLE, 2, dimIds, &slope_varid);
+    nc_def_var(ncid, "cangle", NC_DOUBLE, 2, dimIds, &cangle_varid);
+    nc_def_var(ncid, "dbdx", NC_DOUBLE, 2, dimIds, &dbdx_varid);
+    nc_def_var(ncid, "dbdy", NC_DOUBLE, 2, dimIds, &dbdy_varid);
+    nc_def_var(ncid,"h", NC_DOUBLE,2,dimIds, &h_varid);
+    nc_enddef(ncid);
+    // write the data
+    nc_put_var_double(ncid, lat_varid, &E->lat_rho[0][0]);
+    nc_put_var_double(ncid, lon_varid, &E->lon_rho[0][0]);
+    nc_put_var_double(ncid, h_varid, &E->bathymetry[0][0]);
+    nc_put_var_double(ncid, grad_varid, &E->bathymetry_gradient[0][0]);
+    nc_put_var_double(ncid, slope_varid, &E->bathymetry_slope[0][0]);
+    nc_put_var_double(ncid, cangle_varid, &cangle[0][0]);
+    nc_put_var_double(ncid, dbdx_varid, &E->db_dx[0][0]);
+    nc_put_var_double(ncid, dbdy_varid, &E->db_dy[0][0]);
+    // close the file
+    nc_close(ncid);	
+
+	
+
+
 	// get coastal zeta from roms_his
 	E->zeta_coast = malloc3d_double(E->nTimeRoms, E->nLonRho, E->nLatRho);
 	for(t=0;t<E->nTimeRoms;t++){
@@ -233,5 +416,7 @@ void process_roms(e *E){
 			}
 		}
 	}
+
+	free(E->zeta);
 
 }

@@ -69,11 +69,12 @@ int main(int argc,char **argv)
 	fflush(stdout);
 
 	// get tide on roms grid
+	/*
 	printf("processing tide grid information...");fflush(stdout);
 	process_tides(E);
     printf("done\n");fflush(stdout);
 	fflush(stdout);
-
+	*/
 
 	// add the components
 	printf("adding...");fflush(stdout);
@@ -81,9 +82,11 @@ int main(int argc,char **argv)
 	printf("done\n");fflush(stdout);
 	fflush(stdout);
 
+	/*
 	printf("adding reference levels...");fflush(stdout);
 	process_reference_levels(E);
 	printf("done\n");fflush(stdout);
+	*/
 
 	// write the interpolated field to file
 	//write_netcdf(E);
@@ -96,7 +99,7 @@ int main(int argc,char **argv)
 	#ifdef CHECK
 	write_time_series(E);
 	#endif
-
+	write_json(E);
 
 
 

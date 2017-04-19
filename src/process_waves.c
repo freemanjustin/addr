@@ -526,7 +526,7 @@ void process_auswave(e *E){
 
   // read in the slope data
   //printf("calculating wave setup...");
-  get_coastal_slope(E);
+  //get_coastal_slope(E);
 
   // malloc room for the setup field
   // jNOTE: fix up the size of the time dimension here!
@@ -535,6 +535,7 @@ void process_auswave(e *E){
 
 
   // assign closest slope value to costline derived from the roms rho_mask
+  /*
   double this_time;
   double this_lat;
   double this_lon;
@@ -556,7 +557,7 @@ void process_auswave(e *E){
                   }
           }
   }
-
+  */
 
   for(t=0; t<E->nTimeWavesSubset; t++) {
           //printf("#### t = %d\n",t);
@@ -577,7 +578,7 @@ void process_auswave(e *E){
                                   if( (E->Hs_on_roms[t][i][j] == 0.0) || (E->Tp_on_roms[t][i][j] == 0.0))
                                     E->setup_on_roms[t][i][j] = 0.0;
                                   else
-                                    E->setup_on_roms[t][i][j] = get_setup(E->Hs_on_roms[t][i][j], E->Tp_on_roms[t][i][j], E->slope[nearest_index[i][j]]);
+                                    E->setup_on_roms[t][i][j] = get_setup(E->Hs_on_roms[t][i][j], E->Tp_on_roms[t][i][j], E->bathymetry_slope[i][j]);
 
               #ifdef CHECK
                                   // temporarily splat with Hs to check
